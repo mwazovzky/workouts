@@ -12,7 +12,7 @@ class MetricsAuth
     {
         $token = config('metrics.token');
 
-        if ($token && $request->bearerToken() !== $token) {
+        if ($token !== null && $request->bearerToken() !== $token) {
             abort(401);
         }
 

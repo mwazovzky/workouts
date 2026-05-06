@@ -44,4 +44,12 @@ class MetricsTest extends TestCase
 
         $this->get('/metrics')->assertOk();
     }
+
+    #[Test]
+    public function metrics_endpoint_returns_401_when_token_is_empty_string(): void
+    {
+        config(['metrics.token' => '']);
+
+        $this->get('/metrics')->assertUnauthorized();
+    }
 }
