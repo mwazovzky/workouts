@@ -82,7 +82,10 @@ services:
       APP: my-workouts
       ENV: production
     depends_on:
-      - web
+      web:
+        condition: service_started
+      mysql:
+        condition: service_healthy
     command: run /etc/alloy/config.alloy
     restart: unless-stopped
     mem_limit: 128m
