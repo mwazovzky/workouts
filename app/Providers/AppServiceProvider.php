@@ -31,12 +31,14 @@ class AppServiceProvider extends ServiceProvider
                 return new InMemory;
             }
 
+            // @codeCoverageIgnoreStart
             return new Redis([
                 'host' => config('metrics.redis.host'),
                 'port' => config('metrics.redis.port'),
                 'password' => config('metrics.redis.password'),
                 'database' => config('metrics.redis.database'),
             ]);
+            // @codeCoverageIgnoreEnd
         });
 
         $this->app->bind(MetricsServiceInterface::class, MetricsService::class);
