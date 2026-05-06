@@ -6,6 +6,7 @@ use App\Services\Metrics\MetricsServiceInterface;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
 class RecordHttpMetrics
@@ -23,10 +24,11 @@ class RecordHttpMetrics
         try {
             $response = $next($request);
         } catch (Throwable $e) {
+            $statusCode = $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500;
             $this->metrics->recordHttpRequest(
                 $request->method(),
                 $request->route()?->getName() ?? 'unknown',
-                500,
+                $statusCode,
                 microtime(true) - $start,
             );
             throw $e;
