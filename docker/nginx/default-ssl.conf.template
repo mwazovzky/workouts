@@ -11,6 +11,7 @@ server {
     location = /metrics {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME ${APP_ROOT}/index.php;
+        fastcgi_param HTTP_AUTHORIZATION $http_authorization;
         fastcgi_pass ${PHP_FPM_UPSTREAM};
     }
 
@@ -43,6 +44,7 @@ server {
     location ~ \.php$ {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param HTTP_AUTHORIZATION $http_authorization;
         fastcgi_pass ${PHP_FPM_UPSTREAM};
         fastcgi_read_timeout 60s;
     }
