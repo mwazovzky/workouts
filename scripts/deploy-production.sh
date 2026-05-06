@@ -81,4 +81,6 @@ if [[ -n "${DEPLOY_READYCHECK_URL:-}" ]]; then
   curl --fail --show-error --silent --retry 10 --retry-delay 3 --retry-connrefused "${DEPLOY_READYCHECK_URL}" >/dev/null
 fi
 
+docker image prune -f
+
 docker compose -f "${compose_file}" ps
