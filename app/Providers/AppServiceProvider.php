@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\Workout\WorkoutService::class
         );
 
-        $this->app->bind(Adapter::class, function () {
+        $this->app->singleton(Adapter::class, function () {
             if (app()->environment('testing')) {
                 return new InMemory;
             }
@@ -41,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
             // @codeCoverageIgnoreEnd
         });
 
-        $this->app->bind(MetricsServiceInterface::class, MetricsService::class);
+        $this->app->singleton(MetricsServiceInterface::class, MetricsService::class);
     }
 
     /**
