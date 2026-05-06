@@ -3,11 +3,16 @@
 namespace App\Providers;
 
 use App\Http\Resources\UserResource;
+use App\Services\Metrics\MetricsService;
+use App\Services\Metrics\MetricsServiceInterface;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
+use Prometheus\Storage\Adapter;
+use Prometheus\Storage\InMemory;
+use Prometheus\Storage\Redis;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +25,21 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\Workout\WorkoutServiceInterface::class,
             \App\Services\Workout\WorkoutService::class
         );
+
+        $this->app->bind(Adapter::class, function () {
+            if (app()->environment('testing')) {
+                return new InMemory;
+            }
+
+            return new Redis([
+                'host' => config('metrics.redis.host'),
+                'port' => config('metrics.redis.port'),
+                'password' => config('metrics.redis.password'),
+                'database' => config('metrics.redis.database'),
+            ]);
+        });
+
+        $this->app->bind(MetricsServiceInterface::class, MetricsService::class);
     }
 
     /**

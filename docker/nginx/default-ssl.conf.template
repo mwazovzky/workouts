@@ -8,6 +8,12 @@ server {
         root /var/www/certbot;
     }
 
+    location = /metrics {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME ${APP_ROOT}/index.php;
+        fastcgi_pass ${PHP_FPM_UPSTREAM};
+    }
+
     location / {
         return 301 https://$host$request_uri;
     }

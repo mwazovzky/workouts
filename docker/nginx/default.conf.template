@@ -16,6 +16,12 @@ server {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
+    location = /metrics {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME ${APP_ROOT}/index.php;
+        fastcgi_pass ${PHP_FPM_UPSTREAM};
+    }
+
     location ~ \.php$ {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;

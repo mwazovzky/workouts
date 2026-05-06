@@ -8,6 +8,7 @@ use App\Http\Requests\WorkoutSaveRequest;
 use App\Http\Requests\WorkoutStoreRequest;
 use App\Http\Resources\WorkoutResource;
 use App\Models\Workout;
+use App\Services\Metrics\MetricsServiceInterface;
 use App\Services\Workout\WorkoutServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Log;
 
 class WorkoutController extends Controller
 {
+    public function __construct(private readonly MetricsServiceInterface $metrics) {}
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $workouts = Workout::query()
@@ -80,6 +83,8 @@ class WorkoutController extends Controller
             'user_id' => $workout->user_id,
             'workout_id' => $workout->id,
         ]);
+        $this->metrics->incrementWorkoutCompleted();
+        $this->metrics->setActiveWorkouts(Workout::query()->where('status', WorkoutStatus::InProgress)->count());
 
         return new WorkoutResource($workout);
     }
