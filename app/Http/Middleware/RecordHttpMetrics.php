@@ -6,6 +6,7 @@ use App\Services\Metrics\MetricsServiceInterface;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Throwable;
 
 class RecordHttpMetrics
 {
@@ -19,7 +20,17 @@ class RecordHttpMetrics
 
         $start = microtime(true);
 
-        $response = $next($request);
+        try {
+            $response = $next($request);
+        } catch (Throwable $e) {
+            $this->metrics->recordHttpRequest(
+                $request->method(),
+                $request->route()?->getName() ?? 'unknown',
+                500,
+                microtime(true) - $start,
+            );
+            throw $e;
+        }
 
         $this->metrics->recordHttpRequest(
             $request->method(),
