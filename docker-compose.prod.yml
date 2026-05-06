@@ -11,7 +11,7 @@ services:
       mysql:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"
@@ -31,7 +31,7 @@ services:
       mysql:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
     mem_limit: 128m
 
@@ -58,6 +58,12 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     mem_limit: 32m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 5
 
   alloy:
     image: grafana/alloy:v1.8.1
