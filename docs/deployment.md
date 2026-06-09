@@ -314,7 +314,7 @@ Smoke test the wrapper script and confirm the cert that's actually being served:
 ~/renew-certs.sh
 tail -n 40 ~/renew-certs.log
 
-echo | openssl s_client -connect "$DOMAIN_NAME:443" -servername "$DOMAIN_NAME" 2>/dev/null \
+echo | openssl s_client -connect your-domain.com:443 -servername your-domain.com 2>/dev/null \
   | openssl x509 -noout -subject -issuer -dates
 ```
 
