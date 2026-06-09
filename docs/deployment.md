@@ -281,20 +281,16 @@ docker compose -f docker-compose.prod.yml up -d --force-recreate web
 
 ## 12. Auto-renewal (every 90 days)
 
-Create the renewal script:
+The renewal script lives at `scripts/renew-certs.sh` in the repo. Every run of `scripts/deploy-production.sh` installs it onto the droplet at `/home/deploy/renew-certs.sh` (mode `0755`), so it stays in sync with the repo on every release. You do not need to paste it manually.
 
-```bash
-cat > ~/renew-certs.sh << 'SCRIPT'
-#!/bin/bash
-cd /home/deploy/my-workouts-online
-docker run --rm \
-  -v my-workouts-online_certbot_certs:/etc/letsencrypt \
-  -v my-workouts-online_certbot_webroot:/var/www/certbot \
-  certbot/certbot:latest renew --quiet
-docker compose -f docker-compose.prod.yml exec -T web nginx -s reload
-SCRIPT
-chmod +x ~/renew-certs.sh
-```
+What the script does:
+
+- Logs each run to `/home/deploy/renew-certs.log` with timestamped start/finish markers.
+- Runs `certbot renew --no-random-sleep-on-renew` against the persistent `certbot_certs` / `certbot_webroot` volumes.
+- Reloads nginx in the `web` container so it picks up renewed certs.
+- Uses `set -euo pipefail` and intentionally does **not** pass `--quiet`, so any failure is visible in the log.
+
+Why `--no-random-sleep-on-renew` matters: certbot's default behavior under a non-TTY shell (cron, `docker run` without `-it`) adds a random sleep of up to 8 minutes to spread load on Let's Encrypt. Combined with `--quiet` — which an earlier version of this script used — that sleep was completely silent and indistinguishable from a hang, and any actual renewal error was suppressed too. Dropping both is what makes manual smoke tests and cron failures observable.
 
 Cron job (every 12 hours):
 
@@ -311,6 +307,18 @@ docker run --rm \
   -v my-workouts-online_certbot_webroot:/var/www/certbot \
   certbot/certbot:latest renew --dry-run
 ```
+
+Smoke test the wrapper script and confirm the cert that's actually being served:
+
+```bash
+~/renew-certs.sh
+tail -n 40 ~/renew-certs.log
+
+echo | openssl s_client -connect your-domain.com:443 -servername your-domain.com 2>/dev/null \
+  | openssl x509 -noout -subject -issuer -dates
+```
+
+A healthy outcome on the first run is "Cert not due for renewal" in the log plus a `notAfter` ~90 days in the future. After the next 12-hour cron tick, confirm `~/renew-certs.log` has a fresh timestamped entry — that proves cron is wired to the new script and its `PATH` can find `docker`.
 
 ## 13. Verify health
 
@@ -375,3 +383,4 @@ Use rollback like this:
 - **Certificate not found after certbot succeeds**: Make sure you restarted the web container (`docker compose ... restart web`) so `start.sh` can detect the cert files.
 - **Mixed content warnings**: Ensure `APP_URL` in `.env` starts with `https://`.
 - **Browser shows "Not Secure"**: The staging certificate is not trusted by browsers. Obtain the real certificate (without `--staging`).
+- **Cert expired despite cron being installed**: an earlier version of `scripts/renew-certs.sh` ran `certbot renew --quiet`, which suppressed both error output and certbot's non-TTY random sleep of up to 8 minutes. Symptoms: `crontab -l` shows the entry, but `openssl s_client ... | openssl x509 -noout -dates` reports a past `notAfter`. Fix: confirm the droplet has the current `scripts/renew-certs.sh` installed at `/home/deploy/renew-certs.sh` (`diff scripts/renew-certs.sh ~/renew-certs.sh` from the repo dir) — a recent deploy installs it automatically; if missing, re-run `scripts/deploy-production.sh` or copy the file manually with `install -m 0755 scripts/renew-certs.sh ~/renew-certs.sh`. Then run `~/renew-certs.sh` manually once and inspect `~/renew-certs.log` to confirm renewal completes. If the cert is already expired, run `certbot ... renew --no-random-sleep-on-renew` directly (without the wrapper) to renew immediately, then reload nginx with `docker compose -f docker-compose.prod.yml exec -T web nginx -s reload`.

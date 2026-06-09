@@ -24,6 +24,10 @@ if [[ -n "${DEPLOY_REGISTRY_USERNAME:-}" && -n "${DEPLOY_REGISTRY_TOKEN:-}" ]]; 
   printf '%s' "${DEPLOY_REGISTRY_TOKEN}" | docker login --username "${DEPLOY_REGISTRY_USERNAME}" --password-stdin
 fi
 
+if [[ -f scripts/renew-certs.sh ]]; then
+  install -m 0755 scripts/renew-certs.sh /home/deploy/renew-certs.sh
+fi
+
 tmp_env_file=$(mktemp)
 updated_image_tag=false
 
