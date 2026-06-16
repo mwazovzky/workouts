@@ -10,6 +10,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "80:80"
       - "443:443"
@@ -27,6 +29,8 @@ services:
     command: ["php", "artisan", "queue:work", "--queue=default", "--sleep=3", "--tries=3", "--max-time=3600"]
     depends_on:
       mysql:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     restart: unless-stopped
     mem_limit: 128m
@@ -50,6 +54,17 @@ services:
       retries: 10
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    mem_limit: 32m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 5
+
   alloy:
     image: grafana/alloy:v1.8.1
     volumes:
@@ -59,8 +74,18 @@ services:
       LOKI_URL: ${LOKI_URL?LOKI_URL is required}
       LOKI_USER_ID: ${LOKI_USER_ID?LOKI_USER_ID is required}
       LOKI_API_TOKEN: ${LOKI_API_TOKEN?LOKI_API_TOKEN is required}
+      MIMIR_URL: ${MIMIR_URL?MIMIR_URL is required}
+      MIMIR_USER_ID: ${MIMIR_USER_ID?MIMIR_USER_ID is required}
+      MIMIR_API_TOKEN: ${MIMIR_API_TOKEN?MIMIR_API_TOKEN is required}
+      METRICS_TOKEN: ${METRICS_TOKEN?METRICS_TOKEN is required}
+      MYSQL_METRICS_DSN: ${MYSQL_METRICS_DSN?MYSQL_METRICS_DSN is required}
       APP: my-workouts
       ENV: production
+    depends_on:
+      web:
+        condition: service_started
+      mysql:
+        condition: service_healthy
     command: run /etc/alloy/config.alloy
     restart: unless-stopped
     mem_limit: 128m

@@ -39,8 +39,12 @@ RUN apk add --no-cache \
     nginx \
     supervisor
 
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl zip opcache
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl zip opcache \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
 
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/99-app.ini
 COPY docker/php/zz-app.conf /usr/local/etc/php-fpm.d/zz-app.conf

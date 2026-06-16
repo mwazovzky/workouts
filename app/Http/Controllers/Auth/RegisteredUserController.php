@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Metrics\MetricsServiceInterface;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,8 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
+    public function __construct(private readonly MetricsServiceInterface $metrics) {}
+
     /**
      * Display the registration view.
      */
@@ -48,6 +51,7 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         Log::info('user.registered', ['user_id' => $user->id]);
+        $this->metrics->incrementUserRegistered();
 
         return redirect(route('dashboard', absolute: false));
     }

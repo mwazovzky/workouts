@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ProgramResource;
 use App\Http\Resources\WorkoutTemplateResource;
 use App\Models\Program;
+use App\Services\Metrics\MetricsServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 
 class ProgramController extends Controller
 {
+    public function __construct(private readonly MetricsServiceInterface $metrics) {}
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $programs = Program::query()
@@ -45,6 +48,7 @@ class ProgramController extends Controller
             'user_id' => $request->user()->id,
             'program_id' => $program->id,
         ]);
+        $this->metrics->incrementProgramEnrolled();
 
         return response()->noContent();
     }

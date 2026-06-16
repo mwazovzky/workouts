@@ -55,3 +55,43 @@ loki.write "grafana_cloud" {
     }
   }
 }
+
+// Scrape Laravel /metrics endpoint (business + HTTP metrics)
+prometheus.scrape "laravel_app" {
+  targets = [{"__address__" = "web:80", "__metrics_path__" = "/metrics"}]
+
+  bearer_token    = sys.env("METRICS_TOKEN")
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+
+  forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+// MySQL exporter
+prometheus.exporter.mysql "db" {
+  data_source_name = sys.env("MYSQL_METRICS_DSN")
+}
+
+prometheus.scrape "mysql" {
+  targets         = prometheus.exporter.mysql.db.targets
+  scrape_interval = "30s"
+
+  forward_to = [prometheus.remote_write.grafana_cloud.receiver]
+}
+
+// Remote write to Grafana Cloud Mimir
+prometheus.remote_write "grafana_cloud" {
+  endpoint {
+    url = sys.env("MIMIR_URL")
+
+    basic_auth {
+      username = sys.env("MIMIR_USER_ID")
+      password = sys.env("MIMIR_API_TOKEN")
+    }
+  }
+
+  external_labels = {
+    app = sys.env("APP"),
+    env = sys.env("ENV"),
+  }
+}

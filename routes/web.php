@@ -83,4 +83,8 @@ Route::get('/health/ready', static function () {
     }
 })->name('health.ready');
 
+Route::get('/metrics', \App\Http\Controllers\MetricsController::class)
+    ->middleware(\App\Http\Middleware\MetricsAuth::class)
+    ->name('metrics');
+
 require __DIR__.'/auth.php';

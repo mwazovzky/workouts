@@ -8,6 +8,7 @@ use App\Http\Requests\WorkoutSaveRequest;
 use App\Http\Requests\WorkoutStoreRequest;
 use App\Http\Resources\WorkoutResource;
 use App\Models\Workout;
+use App\Services\Metrics\MetricsServiceInterface;
 use App\Services\Workout\WorkoutServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Log;
 
 class WorkoutController extends Controller
 {
+    public function __construct(private readonly MetricsServiceInterface $metrics) {}
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $workouts = Workout::query()
@@ -56,6 +59,7 @@ class WorkoutController extends Controller
             'workout_id' => $workout->id,
             'template_id' => $request->validated()['workout_template_id'],
         ]);
+        $this->metrics->setActiveWorkouts($this->countActiveWorkouts());
 
         return (new WorkoutResource($workout))->response()->setStatusCode(201);
     }
@@ -80,6 +84,8 @@ class WorkoutController extends Controller
             'user_id' => $workout->user_id,
             'workout_id' => $workout->id,
         ]);
+        $this->metrics->incrementWorkoutCompleted();
+        $this->metrics->setActiveWorkouts($this->countActiveWorkouts());
 
         return new WorkoutResource($workout);
     }
@@ -95,6 +101,7 @@ class WorkoutController extends Controller
             'source_id' => $workout->id,
             'new_id' => $newWorkout->id,
         ]);
+        $this->metrics->setActiveWorkouts($this->countActiveWorkouts());
 
         return (new WorkoutResource($newWorkout))->response()->setStatusCode(201);
     }
@@ -110,7 +117,13 @@ class WorkoutController extends Controller
             'user_id' => $userId,
             'workout_id' => $workout->id,
         ]);
+        $this->metrics->setActiveWorkouts($this->countActiveWorkouts());
 
         return response()->noContent();
+    }
+
+    private function countActiveWorkouts(): int
+    {
+        return Workout::query()->where('status', WorkoutStatus::InProgress)->count();
     }
 }
