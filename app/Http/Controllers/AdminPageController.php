@@ -26,4 +26,9 @@ class AdminPageController extends Controller
     {
         return Inertia::render('Admin/ExerciseIndex');
     }
+
+    public function workoutTemplates(): Response
+    {
+        return Inertia::render('Admin/WorkoutTemplateIndex');
+    }
 }

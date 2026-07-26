@@ -25,6 +25,7 @@ Lookup reference for the app surface area. Detailed behavior belongs in feature 
 | `Admin/EquipmentIndex`| `/admin/equipment`        | Auth + verified + admin | Admin   | List, create, edit, delete equipment                                     |
 | `Admin/CategoryIndex` | `/admin/categories`       | Auth + verified + admin | Admin   | List, create, edit, delete categories                                    |
 | `Admin/ExerciseIndex` | `/admin/exercises`        | Auth + verified + admin | Admin   | List, create, edit, delete exercises                                     |
+| `Admin/WorkoutTemplateIndex` | `/admin/workout-templates` | Auth + verified + admin | Admin | Build workout templates with activities and sets                     |
 
 ## Endpoints
 
@@ -71,6 +72,11 @@ The SPA consumes a versioned REST API under `/api/v1` (Sanctum, stateful). Key g
 | Create exercise     | `POST`   | `/api/v1/admin/exercises`               | `api.v1.admin.exercises.store`   | Auth + verified + admin  | Admin          |
 | Update exercise     | `PUT`    | `/api/v1/admin/exercises/{exercise}`    | `api.v1.admin.exercises.update`  | Auth + verified + admin  | Admin          |
 | Delete exercise     | `DELETE` | `/api/v1/admin/exercises/{exercise}`    | `api.v1.admin.exercises.destroy` | Auth + verified + admin  | Admin          |
+| List templates      | `GET`    | `/api/v1/admin/workout-templates`       | `api.v1.admin.workout-templates.index`   | Auth + verified + admin | Admin |
+| Show template       | `GET`    | `/api/v1/admin/workout-templates/{workout_template}` | `api.v1.admin.workout-templates.show` | Auth + verified + admin | Admin |
+| Create template     | `POST`   | `/api/v1/admin/workout-templates`       | `api.v1.admin.workout-templates.store`   | Auth + verified + admin | Admin |
+| Update template     | `PUT`    | `/api/v1/admin/workout-templates/{workout_template}` | `api.v1.admin.workout-templates.update` | Auth + verified + admin | Admin |
+| Delete template     | `DELETE` | `/api/v1/admin/workout-templates/{workout_template}` | `api.v1.admin.workout-templates.destroy` | Auth + verified + admin | Admin |
 
 ## Related
 

@@ -21,7 +21,7 @@ class ExerciseController extends Controller
         $this->authorize('viewAny', Exercise::class);
 
         $exercises = Exercise::query()
-            ->with('categories')
+            ->with(['categories', 'equipment'])
             ->orderBy('id')
             ->get();
 

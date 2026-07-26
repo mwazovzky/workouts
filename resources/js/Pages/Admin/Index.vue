@@ -41,5 +41,10 @@ const sections = [
     description: 'Manage exercises, equipment, and categories',
     route: 'admin.exercises',
   },
+  {
+    label: 'Workout templates',
+    description: 'Build workout templates with activities and sets',
+    route: 'admin.workout-templates',
+  },
 ];
 </script>

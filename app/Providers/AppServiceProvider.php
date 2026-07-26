@@ -32,6 +32,11 @@ class AppServiceProvider extends ServiceProvider
             \App\Services\Admin\ExerciseServiceInterface::class,
             \App\Services\Admin\ExerciseService::class
         );
+
+        $this->app->bind(
+            \App\Services\Admin\WorkoutTemplateServiceInterface::class,
+            \App\Services\Admin\WorkoutTemplateService::class
+        );
     }
 
     /**

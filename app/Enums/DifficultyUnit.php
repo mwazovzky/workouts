@@ -33,7 +33,7 @@ enum DifficultyUnit: string
             self::Kilograms => __('Weight').' ('.__('kg').')',
             self::Pounds => __('Weight').' ('.__('lbs').')',
             self::Plates => __('plates'),
-            self::HeartRateZone => __('Zone'),
+            self::HeartRateZone => __('Heart-rate zone'),
             self::None => '',
         };
     }
