@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -10,7 +11,7 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
+        $user = User::updateOrCreate(
             [
                 'email' => 'test@example.com',
             ],
@@ -19,5 +20,11 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('password'),
             ],
         );
+
+        $adminRole = Role::where('name', 'Admin')->first();
+
+        if ($adminRole) {
+            $user->roles()->syncWithoutDetaching([$adminRole->id]);
+        }
     }
 }

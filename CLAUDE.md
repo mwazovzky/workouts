@@ -50,10 +50,11 @@ npm run build             # Production frontend build
 - **Service + Interface DI** — Business logic in `app/Services/{Domain}/` (e.g., `Workout/`), each behind an interface, bound in `AppServiceProvider`.
 - **Custom Query Builders** — `app/QueryBuilders/` extends Eloquent Builder with composable scopes (e.g., `WorkoutBuilder` with `ownedBy()`, `withTemplate()`, `latestUpdated()`).
 - **Polymorphic Activities** — `Activity` morphs to both `WorkoutTemplate` and `Workout`. Morph map in `AppServiceProvider`: `workout_template`, `workout`.
-- **Two-Axis Measurement** — Sets use `effort_value` (reps/seconds via `Exercise.effort_type`) + `difficulty_value` (weight/plates via `Equipment.difficulty_unit`). All combinations are valid.
+- **Two-Axis Measurement** — Sets use `effort_value` (reps/seconds via `Exercise.effort_type`) + `difficulty_value` via `Equipment.difficulty_unit` (kilograms/pounds/plates = weight, `heart_rate_zone` = zone 1–5 validated by `HeartRateZoneWithinRange`, `none` = no difficulty field). All combinations are valid.
 - **Eloquent Resources** — All Inertia responses go through API Resources (`app/Http/Resources/`).
 - **Form Requests** — Validation in `app/Http/Requests/`. Authorization via policies in `app/Policies/`.
-- **Internationalization** — `SetLocale` middleware reads `User.locale`. `HasTranslations` trait on system models provides polymorphic translations. UI strings in `lang/*.json`, accessed via `useTranslation` composable.
+- **Role-Based Authorization** — `User::hasRole()`/`isAdmin()` back the `admin` middleware alias (`EnsureUserIsAdmin`, registered in `bootstrap/app.php`) plus per-model policies. `UserResource.is_admin` drives admin-only UI. Admin catalog CRUD lives in `app/Http/Controllers/Api/Admin/` with logic in `app/Services/Admin/`.
+- **Internationalization** — `SetLocale` middleware reads `User.locale`. `HasTranslations` trait on system models provides polymorphic translations via `createWithTranslations()` (seed/create) and `updateTranslations()` (edit; blank values removed for English fallback). UI strings in `lang/*.json`, accessed via `useTranslation` composable.
 
 ### Frontend Patterns
 

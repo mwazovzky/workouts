@@ -21,6 +21,10 @@ Lookup reference for the app surface area. Detailed behavior belongs in feature 
 | `Verify Email`        | `/verify-email`           | Auth            | Auth & Profile  | Prompt for email verification                                            |
 | `Confirm Password`    | `/confirm-password`       | Auth            | Auth & Profile  | Confirm password for sensitive actions                                   |
 | `Profile/Edit`        | `/profile`                | Auth            | Auth & Profile  | Update profile, password, locale, theme, or delete account               |
+| `Admin/Index`         | `/admin`                  | Auth + verified + admin | Admin   | Admin section landing with links to each catalog                         |
+| `Admin/EquipmentIndex`| `/admin/equipment`        | Auth + verified + admin | Admin   | List, create, edit, delete equipment                                     |
+| `Admin/CategoryIndex` | `/admin/categories`       | Auth + verified + admin | Admin   | List, create, edit, delete categories                                    |
+| `Admin/ExerciseIndex` | `/admin/exercises`        | Auth + verified + admin | Admin   | List, create, edit, delete exercises                                     |
 
 ## Endpoints
 
@@ -51,7 +55,22 @@ Lookup reference for the app surface area. Detailed behavior belongs in feature 
 
 ## API
 
-Single API endpoint: `GET /api/user` with Sanctum authentication.
+The SPA consumes a versioned REST API under `/api/v1` (Sanctum, stateful). Key groups: programs, workouts, workout-templates, dashboard, profile, and the admin catalog below. Route names are prefixed `api.v1.`.
+
+| Action              | Method   | Path                                    | Route Name                       | Access                   | Owning Feature |
+| ------------------- | -------- | --------------------------------------- | -------------------------------- | ------------------------ | -------------- |
+| List equipment      | `GET`    | `/api/v1/admin/equipment`               | `api.v1.admin.equipment.index`   | Auth + verified + admin  | Admin          |
+| Create equipment    | `POST`   | `/api/v1/admin/equipment`               | `api.v1.admin.equipment.store`   | Auth + verified + admin  | Admin          |
+| Update equipment    | `PUT`    | `/api/v1/admin/equipment/{equipment}`   | `api.v1.admin.equipment.update`  | Auth + verified + admin  | Admin          |
+| Delete equipment    | `DELETE` | `/api/v1/admin/equipment/{equipment}`   | `api.v1.admin.equipment.destroy` | Auth + verified + admin  | Admin          |
+| List categories     | `GET`    | `/api/v1/admin/categories`              | `api.v1.admin.categories.index`  | Auth + verified + admin  | Admin          |
+| Create category     | `POST`   | `/api/v1/admin/categories`              | `api.v1.admin.categories.store`  | Auth + verified + admin  | Admin          |
+| Update category     | `PUT`    | `/api/v1/admin/categories/{category}`   | `api.v1.admin.categories.update` | Auth + verified + admin  | Admin          |
+| Delete category     | `DELETE` | `/api/v1/admin/categories/{category}`   | `api.v1.admin.categories.destroy`| Auth + verified + admin  | Admin          |
+| List exercises      | `GET`    | `/api/v1/admin/exercises`               | `api.v1.admin.exercises.index`   | Auth + verified + admin  | Admin          |
+| Create exercise     | `POST`   | `/api/v1/admin/exercises`               | `api.v1.admin.exercises.store`   | Auth + verified + admin  | Admin          |
+| Update exercise     | `PUT`    | `/api/v1/admin/exercises/{exercise}`    | `api.v1.admin.exercises.update`  | Auth + verified + admin  | Admin          |
+| Delete exercise     | `DELETE` | `/api/v1/admin/exercises/{exercise}`    | `api.v1.admin.exercises.destroy` | Auth + verified + admin  | Admin          |
 
 ## Related
 
@@ -59,3 +78,4 @@ Single API endpoint: `GET /api/user` with Sanctum authentication.
 - [Programs](features/programs.md)
 - [Workout Logging](features/workout-logging.md)
 - [Auth & Profile](features/auth-and-profile.md)
+- [Admin Content Management](features/admin-content-management.md)

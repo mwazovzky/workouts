@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AboutController;
+use App\Http\Controllers\AdminPageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\ProfileController;
@@ -44,6 +45,13 @@ Route::get('/workouts/{id}/edit', [WorkoutPageController::class, 'edit'])
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+});
+
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminPageController::class, 'index'])->name('index');
+    Route::get('/equipment', [AdminPageController::class, 'equipment'])->name('equipment');
+    Route::get('/categories', [AdminPageController::class, 'categories'])->name('categories');
+    Route::get('/exercises', [AdminPageController::class, 'exercises'])->name('exercises');
 });
 
 Route::get('/about', [AboutController::class, 'index'])

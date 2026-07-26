@@ -1,11 +1,14 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 
+let mockUser = { name: 'Jane', is_admin: false };
+
 vi.mock('@inertiajs/vue3', () => ({
   Link: {
     props: ['href'],
     template: '<a :href="href"><slot /></a>',
   },
+  usePage: () => ({ props: { auth: { user: mockUser } } }),
 }));
 
 vi.mock('@/composables/useTranslation', () => ({
@@ -68,9 +71,26 @@ describe('BottomNav', () => {
   });
 
   it('renders an svg icon for each tab', () => {
+    mockUser = { name: 'Jane', is_admin: false };
     const wrapper = buildWrapper();
     const svgs = wrapper.findAll('svg');
 
     expect(svgs).toHaveLength(4);
+  });
+
+  it('hides the Admin tab for non-admin users', () => {
+    mockUser = { name: 'Jane', is_admin: false };
+    const wrapper = buildWrapper();
+
+    expect(wrapper.text()).not.toContain('Admin');
+  });
+
+  it('renders the Admin tab for admin users', () => {
+    mockUser = { name: 'Jane', is_admin: true };
+    const wrapper = buildWrapper();
+    const links = wrapper.findAll('a');
+
+    expect(wrapper.text()).toContain('Admin');
+    expect(links.map(l => l.attributes('href'))).toContain('/admin.index');
   });
 });

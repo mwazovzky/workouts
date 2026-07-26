@@ -16,13 +16,15 @@ Laravel 12 · Inertia v2 · Vue 3 (Composition API, `<script setup>`) · Tailwin
 
 **Form Requests** — Validation via dedicated request classes. Authorization via policies separately.
 
+**Role-Based Authorization** — `User::hasRole()` / `User::isAdmin()` check the `roles` relation. The `admin` middleware alias (`EnsureUserIsAdmin`, registered in `bootstrap/app.php`) gates admin web and API route groups; per-model policies (`EquipmentPolicy`, `CategoryPolicy`, `ExercisePolicy`) provide defense-in-depth. `UserResource` exposes `is_admin`, so the shared `auth.user` prop drives admin-only navigation. Admin write endpoints live under `App\Http\Controllers\Api\Admin` with business logic in `App\Services\Admin`.
+
 **Deferred Props** — `ProgramShow` defers `workouts` (templates list); `WorkoutShow` defers `activities` (with sets, exercise, equipment, categories).
 
 **Shared Auth** — `auth.user` shared to all pages via `HandleInertiaRequests` + `AppServiceProvider`.
 
 **Internationalization** — `SetLocale` middleware sets locale from `User.locale`. `HasTranslations` trait on system models provides polymorphic translations with auto-eager-loading. UI strings in `lang/*.json` are shared through Inertia and consumed via `useTranslation`.
 
-**Two-Axis Measurement** — Sets use `effort_value` (reps/seconds) + `difficulty_value` (weight/plates, nullable). `Equipment.difficulty_unit` (kilograms, pounds, plates, none) controls load; `Exercise.effort_type` (repetitions, duration) controls work. "Bodyweight" equipment (`difficulty_unit = none`) eliminates nullable FKs. All 4x2 combinations valid.
+**Two-Axis Measurement** — Sets use `effort_value` (reps/seconds) + `difficulty_value` (nullable). `Equipment.difficulty_unit` (kilograms, pounds, plates, heart_rate_zone, none) controls the load axis; `Exercise.effort_type` (repetitions, duration) controls work. "Bodyweight" equipment (`difficulty_unit = none`) hides the difficulty field. For `heart_rate_zone`, `difficulty_value` is an integer 1–5 (a heart-rate zone) — validated on save by `App\Rules\HeartRateZoneWithinRange` and entered via a 1–5 picker in the set editor; a blank zone stores null. All unit/effort combinations are valid.
 
 ## Key Decisions
 
@@ -46,6 +48,7 @@ Laravel 12 · Inertia v2 · Vue 3 (Composition API, `<script setup>`) · Tailwin
 ### Translation Sources
 
 - System models use the polymorphic `translations` table
+- `HasTranslations::createWithTranslations()` seeds records; `updateTranslations()` applies admin edits and removes blank values so reads fall back to English
 - UI strings live in `lang/en.json` and `lang/ru.json`
 - Validation and auth messages use Laravel language files under `lang/{locale}`
 
@@ -61,12 +64,14 @@ Only non-obvious locations listed.
 
 | Path                          | Contains                                                                     |
 | ----------------------------- | ---------------------------------------------------------------------------- |
-| `app/Services/{Domain}/`      | Service class + interface per domain                                         |
+| `app/Services/{Domain}/`      | Service class + interface per domain (`Workout/`, `Admin/`)                  |
+| `app/Http/Controllers/Api/Admin/` | Admin catalog CRUD controllers (equipment, categories, exercises)       |
 | `app/QueryBuilders/`          | Custom Eloquent builders                                                     |
-| `app/Enums/`                  | `WorkoutStatus` (InProgress, Completed), `EffortType` (Repetitions, Duration), `DifficultyUnit` (Kilograms, Pounds, Plates, None) |
-| `app/Policies/`               | `WorkoutPolicy` — owner + status checks for workout mutations                |
-| `app/Rules/`                  | Custom validation rules (`CompletedSetRequiresEffort`)                       |
-| `resources/js/Components/ui/` | Reusable UI primitives (alert, alert-dialog, avatar, badge, button, card, empty, input, separator, sheet, skeleton, sonner, switch, table, tooltip) |
+| `app/Enums/`                  | `WorkoutStatus` (InProgress, Completed), `EffortType` (Repetitions, Duration), `DifficultyUnit` (Kilograms, Pounds, Plates, HeartRateZone, None) |
+| `app/Policies/`               | `WorkoutPolicy` — owner + status checks; `Equipment`/`Category`/`ExercisePolicy` — admin-only catalog mutations |
+| `app/Http/Middleware/`        | `EnsureUserIsAdmin` (`admin` alias) — 403s non-admins                        |
+| `app/Rules/`                  | Custom validation rules (`CompletedSetRequiresEffort`, `HeartRateZoneWithinRange`) |
+| `resources/js/Components/ui/` | Reusable UI primitives (alert, alert-dialog, avatar, badge, button, card, empty, input, select, separator, sheet, skeleton, sonner, switch, table, textarea, tooltip) |
 | `resources/js/composables/`   | `useEnrollment` — enrollment state + toggle; `useTranslation` — `t()` helper |
 | `resources/js/utils/`         | `date` (locale-aware formatting), `format` (status display), `navigation` (route helpers) |
 | `lang/`                       | JSON translation files (`en.json`, `ru.json`) for UI strings                 |
@@ -88,6 +93,6 @@ Activity → Exercise
 Activity ←1:N— Set
 Exercise → Equipment
 Exercise ←M:N→ Category
-User ←M:N→ Role              (unused — future RBAC)
+User ←M:N→ Role              (pivot: role_user — `Admin` role gates content management)
 {Exercise,Equipment,Category,Program,WorkoutTemplate} ←morph— Translation
 ```

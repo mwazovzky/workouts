@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 const { mockAxios } = vi.hoisted(() => ({
   mockAxios: {
+    post: vi.fn(),
     patch: vi.fn(),
     put: vi.fn(),
     delete: vi.fn(),
@@ -89,6 +90,15 @@ describe('useApiForm', () => {
   // -------------------------------------------------------
   // HTTP methods — payload excludes meta keys
   // -------------------------------------------------------
+
+  it('post() calls axios.post with form data, excluding meta keys', async () => {
+    mockAxios.post.mockResolvedValueOnce({ data: {} });
+    const form = useApiForm({ name: 'Alice' });
+
+    await form.post('/api/v1/admin/categories');
+
+    expect(mockAxios.post).toHaveBeenCalledWith('/api/v1/admin/categories', { name: 'Alice' });
+  });
 
   it('patch() calls axios.patch with form data, excluding meta keys', async () => {
     mockAxios.patch.mockResolvedValueOnce({ data: {} });

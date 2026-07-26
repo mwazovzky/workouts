@@ -7,6 +7,7 @@ const META_KEYS = new Set([
   'recentlySuccessful',
   'reset',
   'clearErrors',
+  'post',
   'patch',
   'put',
   'delete',
@@ -92,6 +93,7 @@ export function useApiForm(initialData) {
     }
   };
 
+  form.post = (url, options = {}) => submit('post', url, options);
   form.patch = (url, options = {}) => submit('patch', url, options);
   form.put = (url, options = {}) => submit('put', url, options);
   form.delete = (url, options = {}) => submit('delete', url, options);

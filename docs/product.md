@@ -12,8 +12,10 @@ Workout tracking app for browsing training programs, starting workouts from temp
 | **Activity** | Exercise slot inside a template or workout. |
 | **Set** | Ordered effort record inside an activity with effort, difficulty, and completion state. |
 | **Exercise** | Catalog item with effort type, equipment, categories, and translations. |
-| **Equipment** | Gear type that determines the difficulty unit, such as kilograms, pounds, plates, or none. |
+| **Equipment** | Gear type that determines the difficulty unit, such as kilograms, pounds, plates, heart-rate zone, or none. |
+| **Heart-rate zone** | Intensity difficulty unit (1–5) for cardio equipment; a set's difficulty records the target zone instead of a weight. |
 | **Category** | Exercise classification such as chest, legs, or mobility. |
+| **Admin** | User with the `Admin` role who manages the shared content catalog (equipment, categories, exercises). |
 
 ## Core User Flow
 
