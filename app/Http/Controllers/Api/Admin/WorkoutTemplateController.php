@@ -64,6 +64,12 @@ class WorkoutTemplateController extends Controller
     {
         $this->authorize('delete', $workoutTemplate);
 
+        abort_if(
+            $workoutTemplate->programs()->exists(),
+            409,
+            __('Cannot delete a workout template that is used by a program.'),
+        );
+
         $this->service->delete($workoutTemplate);
 
         return response()->noContent();

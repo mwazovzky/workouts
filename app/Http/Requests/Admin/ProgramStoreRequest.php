@@ -2,15 +2,12 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Enums\Weekday;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class ProgramStoreRequest extends FormRequest
 {
-    private const WEEKDAYS = [
-        'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
-    ];
-
     public function authorize(): bool
     {
         return true;
@@ -32,7 +29,7 @@ class ProgramStoreRequest extends FormRequest
 
             'assignments' => ['present', 'array'],
             'assignments.*.workout_template_id' => ['required', 'integer', 'exists:workout_templates,id'],
-            'assignments.*.weekday' => ['required', Rule::in(self::WEEKDAYS)],
+            'assignments.*.weekday' => ['required', Rule::in(Weekday::values())],
         ];
     }
 

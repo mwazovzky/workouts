@@ -22,7 +22,9 @@ Laravel 12 · Inertia v2 · Vue 3 (Composition API, `<script setup>`) · Tailwin
 
 **Shared Auth** — `auth.user` shared to all pages via `HandleInertiaRequests` + `AppServiceProvider`.
 
-**Internationalization** — `SetLocale` middleware sets locale from `User.locale`. `HasTranslations` trait on system models provides polymorphic translations with auto-eager-loading. UI strings in `lang/*.json` are shared through Inertia and consumed via `useTranslation`.
+**Internationalization** — `SetLocale` middleware sets locale from `User.locale`. `HasTranslations` trait on system models provides polymorphic translations with auto-eager-loading. Translations are purged only on a real/force delete, so a **soft-deleted** record still resolves its name. UI strings in `lang/*.json` are shared through Inertia and consumed via `useTranslation`.
+
+**Soft-deleted exercises** — `Exercise` uses `SoftDeletes`: an admin "delete" **retires** it (removed from catalog/pickers via the global scope) without touching workout history. `Activity::exercise()` is `->withTrashed()`, so historical workouts and templates still resolve a retired exercise's name/effort/difficulty. Reference guards that must see retired rows use `withTrashed()` (e.g. the equipment-in-use delete guard). Templates and programs are hard-deleted (a `Workout` copies its own `name` and owns its activities/sets, so no history is lost); a template can't be deleted while a program uses it (409).
 
 **Two-Axis Measurement** — Sets use `effort_value` (reps/seconds) + `difficulty_value` (nullable). `Equipment.difficulty_unit` (kilograms, pounds, plates, heart_rate_zone, none) controls the load axis; `Exercise.effort_type` (repetitions, duration) controls work. "Bodyweight" equipment (`difficulty_unit = none`) hides the difficulty field. For `heart_rate_zone`, `difficulty_value` is an integer 1–5 (a heart-rate zone) — validated on save by `App\Rules\HeartRateZoneWithinRange` and entered via a 1–5 picker in the set editor; a blank zone stores null. All unit/effort combinations are valid.
 
@@ -67,7 +69,7 @@ Only non-obvious locations listed.
 | `app/Services/{Domain}/`      | Service class + interface per domain (`Workout/`, `Admin/`)                  |
 | `app/Http/Controllers/Api/Admin/` | Admin catalog CRUD controllers (equipment, categories, exercises)       |
 | `app/QueryBuilders/`          | Custom Eloquent builders                                                     |
-| `app/Enums/`                  | `WorkoutStatus` (InProgress, Completed), `EffortType` (Repetitions, Duration), `DifficultyUnit` (Kilograms, Pounds, Plates, HeartRateZone, None) |
+| `app/Enums/`                  | `WorkoutStatus` (InProgress, Completed), `EffortType` (Repetitions, Duration), `DifficultyUnit` (Kilograms, Pounds, Plates, HeartRateZone, None), `Weekday` (Monday…Sunday) |
 | `app/Policies/`               | `WorkoutPolicy` — owner + status checks; `Equipment`/`Category`/`ExercisePolicy` — admin-only catalog mutations |
 | `app/Http/Middleware/`        | `EnsureUserIsAdmin` (`admin` alias) — 403s non-admins                        |
 | `app/Rules/`                  | Custom validation rules (`CompletedSetRequiresEffort`, `HeartRateZoneWithinRange`) |

@@ -35,7 +35,9 @@ class Activity extends Model
 
     public function exercise(): BelongsTo
     {
-        return $this->belongsTo(Exercise::class);
+        // Include soft-deleted (retired) exercises so historical workouts and
+        // templates still resolve the exercise name, effort, and difficulty.
+        return $this->belongsTo(Exercise::class)->withTrashed();
     }
 
     public function sets(): HasMany

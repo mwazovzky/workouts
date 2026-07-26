@@ -22,6 +22,12 @@ trait HasTranslations
     public static function bootHasTranslations(): void
     {
         static::deleting(function ($model) {
+            // Keep translations on a soft delete so a "retired" record still
+            // resolves its name/description; only purge on a real/force delete.
+            if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
+                return;
+            }
+
             $model->translations()->delete();
         });
     }

@@ -179,15 +179,52 @@ class ExerciseAdminTest extends TestCase
     }
 
     #[Test]
-    public function admin_can_delete_exercise(): void
+    public function admin_can_delete_exercise_which_soft_deletes_it(): void
     {
         $admin = User::factory()->admin()->create();
         $exercise = Exercise::factory()->create();
-        $exercise->categories()->attach(Category::factory()->create()->id);
 
         $this->actingAs($admin)->deleteJson("/api/v1/admin/exercises/{$exercise->id}")->assertNoContent();
 
-        $this->assertDatabaseMissing('exercises', ['id' => $exercise->id]);
-        $this->assertDatabaseCount('category_exercise', 0);
+        $this->assertSoftDeleted('exercises', ['id' => $exercise->id]);
+    }
+
+    #[Test]
+    public function a_retired_exercise_is_excluded_from_the_admin_list(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $kept = Exercise::factory()->create();
+        $retired = Exercise::factory()->create();
+
+        $this->actingAs($admin)->deleteJson("/api/v1/admin/exercises/{$retired->id}")->assertNoContent();
+
+        $response = $this->actingAs($admin)->getJson('/api/v1/admin/exercises');
+        $response->assertOk()->assertJsonCount(1, 'data');
+        $this->assertSame($kept->id, $response->json('data.0.id'));
+    }
+
+    #[Test]
+    public function retiring_an_in_use_exercise_preserves_workout_history_and_name(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $exercise = Exercise::createWithTranslations(
+            ['en' => ['name' => 'Bicycle Training', 'description' => 'Ride for time.']],
+            ['equipment_id' => Equipment::factory()->create()->id, 'effort_type' => 'duration'],
+        );
+
+        $workout = \App\Models\Workout::factory()->create(['status' => 'in_progress']);
+        $activity = \App\Models\Activity::factory()->for($workout, 'workout')->create([
+            'exercise_id' => $exercise->id, 'order' => 1,
+        ]);
+        $set = \App\Models\Set::factory()->for($activity, 'activity')->create(['order' => 1]);
+
+        $this->actingAs($admin)->deleteJson("/api/v1/admin/exercises/{$exercise->id}")->assertNoContent();
+
+        $this->assertSoftDeleted('exercises', ['id' => $exercise->id]);
+        $this->assertDatabaseHas('activities', ['id' => $activity->id]);
+        $this->assertDatabaseHas('sets', ['id' => $set->id]);
+
+        // The activity still resolves the retired exercise's name (withTrashed + kept translations).
+        $this->assertSame('Bicycle Training', $activity->fresh()->exercise->name);
     }
 }

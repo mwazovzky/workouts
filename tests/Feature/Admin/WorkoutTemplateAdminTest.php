@@ -202,4 +202,19 @@ class WorkoutTemplateAdminTest extends TestCase
         $this->assertDatabaseMissing('activities', ['workout_id' => $id, 'workout_type' => 'workout_template']);
         $this->assertDatabaseCount('sets', 0);
     }
+
+    #[Test]
+    public function cannot_delete_a_template_that_is_used_by_a_program(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $template = WorkoutTemplate::factory()->create();
+        $program = \App\Models\Program::factory()->create();
+        $program->workoutTemplates()->attach($template->id, ['weekday' => 'Monday']);
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/v1/admin/workout-templates/{$template->id}")
+            ->assertStatus(409);
+
+        $this->assertDatabaseHas('workout_templates', ['id' => $template->id]);
+    }
 }

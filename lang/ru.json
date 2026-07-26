@@ -256,6 +256,7 @@
   "Failed to delete workout template": "Не удалось удалить шаблон тренировки",
   "A workout template must have at least one activity.": "Шаблон тренировки должен содержать хотя бы одно упражнение.",
   "Each activity must have at least one set.": "Каждое упражнение должно содержать хотя бы один подход.",
+  "Cannot delete a workout template that is used by a program.": "Нельзя удалить шаблон тренировки, используемый программой.",
   "New program": "Новая программа",
   "Edit program": "Редактировать программу",
   "Delete program": "Удалить программу",

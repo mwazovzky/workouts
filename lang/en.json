@@ -256,6 +256,7 @@
   "Failed to delete workout template": "Failed to delete workout template",
   "A workout template must have at least one activity.": "A workout template must have at least one activity.",
   "Each activity must have at least one set.": "Each activity must have at least one set.",
+  "Cannot delete a workout template that is used by a program.": "Cannot delete a workout template that is used by a program.",
   "New program": "New program",
   "Edit program": "Edit program",
   "Delete program": "Delete program",

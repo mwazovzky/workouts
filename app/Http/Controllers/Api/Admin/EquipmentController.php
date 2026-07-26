@@ -51,7 +51,7 @@ class EquipmentController extends Controller
         $this->authorize('delete', $equipment);
 
         abort_if(
-            $equipment->exercises()->exists(),
+            $equipment->exercises()->withTrashed()->exists(),
             409,
             __('Cannot delete equipment that is used by exercises.'),
         );

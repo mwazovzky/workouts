@@ -178,4 +178,19 @@ class EquipmentAdminTest extends TestCase
 
         $this->assertDatabaseHas('equipment', ['id' => $equipment->id]);
     }
+
+    #[Test]
+    public function cannot_delete_equipment_referenced_only_by_a_retired_exercise(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $equipment = Equipment::factory()->create();
+        $exercise = Exercise::factory()->create(['equipment_id' => $equipment->id]);
+        $exercise->delete(); // soft delete — row still references the equipment
+
+        $this->actingAs($admin)
+            ->deleteJson("/api/v1/admin/equipment/{$equipment->id}")
+            ->assertStatus(409);
+
+        $this->assertDatabaseHas('equipment', ['id' => $equipment->id]);
+    }
 }
