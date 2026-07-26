@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\EquipmentController as AdminEquipmentController;
 use App\Http\Controllers\Api\Admin\ExerciseController as AdminExerciseController;
+use App\Http\Controllers\Api\Admin\ProgramController as AdminProgramController;
 use App\Http\Controllers\Api\Admin\WorkoutTemplateController as AdminWorkoutTemplateController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ProfileController;
@@ -46,6 +47,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::apiResource('exercises', AdminExerciseController::class)
                 ->only(['index', 'store', 'update', 'destroy']);
             Route::apiResource('workout-templates', AdminWorkoutTemplateController::class)
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+            Route::apiResource('programs', AdminProgramController::class)
                 ->only(['index', 'show', 'store', 'update', 'destroy']);
         });
     });

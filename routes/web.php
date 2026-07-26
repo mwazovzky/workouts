@@ -53,6 +53,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/categories', [AdminPageController::class, 'categories'])->name('categories');
     Route::get('/exercises', [AdminPageController::class, 'exercises'])->name('exercises');
     Route::get('/workout-templates', [AdminPageController::class, 'workoutTemplates'])->name('workout-templates');
+    Route::get('/programs', [AdminPageController::class, 'programs'])->name('programs');
 });
 
 Route::get('/about', [AboutController::class, 'index'])

@@ -46,5 +46,10 @@ const sections = [
     description: 'Build workout templates with activities and sets',
     route: 'admin.workout-templates',
   },
+  {
+    label: 'Programs',
+    description: 'Assemble programs and schedule templates by weekday',
+    route: 'admin.programs',
+  },
 ];
 </script>

@@ -255,5 +255,22 @@
   "Failed to save workout template": "Не удалось сохранить шаблон тренировки",
   "Failed to delete workout template": "Не удалось удалить шаблон тренировки",
   "A workout template must have at least one activity.": "Шаблон тренировки должен содержать хотя бы одно упражнение.",
-  "Each activity must have at least one set.": "Каждое упражнение должно содержать хотя бы один подход."
+  "Each activity must have at least one set.": "Каждое упражнение должно содержать хотя бы один подход.",
+  "New program": "Новая программа",
+  "Edit program": "Редактировать программу",
+  "Delete program": "Удалить программу",
+  "No programs yet": "Программ пока нет",
+  "Create your first program to get started": "Создайте первую программу, чтобы начать",
+  "Assemble programs and schedule templates by weekday": "Собирайте программы и распределяйте шаблоны по дням недели",
+  "Program deleted": "Программа удалена",
+  "Failed to load programs": "Не удалось загрузить программы",
+  "Failed to save program": "Не удалось сохранить программу",
+  "Failed to delete program": "Не удалось удалить программу",
+  "workouts scheduled": "тренировок запланировано",
+  "Weekly schedule": "Расписание на неделю",
+  "Add assignment": "Добавить назначение",
+  "No workouts scheduled yet": "Тренировки ещё не запланированы",
+  "Create a workout template first": "Сначала создайте шаблон тренировки",
+  "Weekday": "День недели",
+  "Workout template": "Шаблон тренировки"
 }

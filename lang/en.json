@@ -255,5 +255,22 @@
   "Failed to save workout template": "Failed to save workout template",
   "Failed to delete workout template": "Failed to delete workout template",
   "A workout template must have at least one activity.": "A workout template must have at least one activity.",
-  "Each activity must have at least one set.": "Each activity must have at least one set."
+  "Each activity must have at least one set.": "Each activity must have at least one set.",
+  "New program": "New program",
+  "Edit program": "Edit program",
+  "Delete program": "Delete program",
+  "No programs yet": "No programs yet",
+  "Create your first program to get started": "Create your first program to get started",
+  "Assemble programs and schedule templates by weekday": "Assemble programs and schedule templates by weekday",
+  "Program deleted": "Program deleted",
+  "Failed to load programs": "Failed to load programs",
+  "Failed to save program": "Failed to save program",
+  "Failed to delete program": "Failed to delete program",
+  "workouts scheduled": "workouts scheduled",
+  "Weekly schedule": "Weekly schedule",
+  "Add assignment": "Add assignment",
+  "No workouts scheduled yet": "No workouts scheduled yet",
+  "Create a workout template first": "Create a workout template first",
+  "Weekday": "Weekday",
+  "Workout template": "Workout template"
 }

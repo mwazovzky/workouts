@@ -26,6 +26,7 @@ Lookup reference for the app surface area. Detailed behavior belongs in feature 
 | `Admin/CategoryIndex` | `/admin/categories`       | Auth + verified + admin | Admin   | List, create, edit, delete categories                                    |
 | `Admin/ExerciseIndex` | `/admin/exercises`        | Auth + verified + admin | Admin   | List, create, edit, delete exercises                                     |
 | `Admin/WorkoutTemplateIndex` | `/admin/workout-templates` | Auth + verified + admin | Admin | Build workout templates with activities and sets                     |
+| `Admin/ProgramIndex`  | `/admin/programs`         | Auth + verified + admin | Admin   | Assemble programs and schedule templates by weekday                      |
 
 ## Endpoints
 
@@ -77,6 +78,11 @@ The SPA consumes a versioned REST API under `/api/v1` (Sanctum, stateful). Key g
 | Create template     | `POST`   | `/api/v1/admin/workout-templates`       | `api.v1.admin.workout-templates.store`   | Auth + verified + admin | Admin |
 | Update template     | `PUT`    | `/api/v1/admin/workout-templates/{workout_template}` | `api.v1.admin.workout-templates.update` | Auth + verified + admin | Admin |
 | Delete template     | `DELETE` | `/api/v1/admin/workout-templates/{workout_template}` | `api.v1.admin.workout-templates.destroy` | Auth + verified + admin | Admin |
+| List programs (admin) | `GET`  | `/api/v1/admin/programs`                | `api.v1.admin.programs.index`    | Auth + verified + admin  | Admin          |
+| Show program (admin)  | `GET`  | `/api/v1/admin/programs/{program}`      | `api.v1.admin.programs.show`     | Auth + verified + admin  | Admin          |
+| Create program      | `POST`   | `/api/v1/admin/programs`                | `api.v1.admin.programs.store`    | Auth + verified + admin  | Admin          |
+| Update program      | `PUT`    | `/api/v1/admin/programs/{program}`      | `api.v1.admin.programs.update`   | Auth + verified + admin  | Admin          |
+| Delete program      | `DELETE` | `/api/v1/admin/programs/{program}`      | `api.v1.admin.programs.destroy`  | Auth + verified + admin  | Admin          |
 
 ## Related
 
