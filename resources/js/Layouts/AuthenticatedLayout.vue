@@ -15,7 +15,7 @@ const { t } = useTranslation();
   <div>
     <div class="min-h-screen bg-background text-foreground">
       <nav
-        class="hidden border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:block"
+        class="relative z-50 hidden border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:block"
       >
         <!-- Primary Navigation Menu -->
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
