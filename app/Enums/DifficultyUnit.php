@@ -7,6 +7,7 @@ enum DifficultyUnit: string
     case Kilograms = 'kilograms';
     case Pounds = 'pounds';
     case Plates = 'plates';
+    case HeartRateZone = 'heart_rate_zone';
     case None = 'none';
 
     /**
@@ -18,6 +19,7 @@ enum DifficultyUnit: string
             self::Kilograms => __('kg'),
             self::Pounds => __('lbs'),
             self::Plates => __('plates'),
+            self::HeartRateZone => __('zone'),
             self::None => '',
         };
     }
@@ -31,6 +33,7 @@ enum DifficultyUnit: string
             self::Kilograms => __('Weight').' ('.__('kg').')',
             self::Pounds => __('Weight').' ('.__('lbs').')',
             self::Plates => __('plates'),
+            self::HeartRateZone => __('Zone'),
             self::None => '',
         };
     }

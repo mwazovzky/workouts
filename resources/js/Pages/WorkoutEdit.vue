@@ -355,11 +355,12 @@ function onAddSet({ activityId }) {
   const maxOrder = activity.sets.length ? Math.max(...activity.sets.map(s => s.order)) : 0;
   const hasDifficulty =
     activity.exercise_difficulty_unit && activity.exercise_difficulty_unit !== 'none';
+  const isZone = activity.exercise_difficulty_unit === 'heart_rate_zone';
   activity.sets.push({
     id: null,
     order: maxOrder + 1,
     effort_value: lastSet ? lastSet.effort_value : 0,
-    difficulty_value: lastSet ? lastSet.difficulty_value : hasDifficulty ? 0 : null,
+    difficulty_value: lastSet ? lastSet.difficulty_value : hasDifficulty && !isZone ? 0 : null,
     is_completed: false,
   });
   markDirty();

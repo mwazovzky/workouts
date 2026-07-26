@@ -1,6 +1,7 @@
 <script setup>
 import { computed, reactive, watch } from 'vue';
 import { Input } from '@/Components/ui/input';
+import { Select } from '@/Components/ui/select';
 import { Button } from '@/Components/ui/button';
 import { Check, Minus } from 'lucide-vue-next';
 import { useTranslation } from '@/composables/useTranslation';
@@ -17,6 +18,24 @@ const props = defineProps({
 const emits = defineEmits(['update', 'remove', 'completion-toggled']);
 
 const hasDifficulty = computed(() => props.difficultyUnit && props.difficultyUnit !== 'none');
+const isZone = computed(() => props.difficultyUnit === 'heart_rate_zone');
+const zoneOptions = [1, 2, 3, 4, 5];
+
+// Resolve the difficulty value to emit. For heart-rate zones, only 1-5 are
+// valid; 0/blank (e.g. a drill with no target zone) becomes null.
+function resolvedDifficulty() {
+  if (!hasDifficulty.value) {
+    return null;
+  }
+
+  const value = Number(local.difficulty_value);
+
+  if (isZone.value) {
+    return value >= 1 && value <= 5 ? value : null;
+  }
+
+  return value;
+}
 
 const local = reactive({
   id: props.set.id ?? null,
@@ -41,7 +60,7 @@ watch(
       id: local.id,
       order: local.order,
       effort_value: Number(local.effort_value),
-      difficulty_value: hasDifficulty.value ? Number(local.difficulty_value) : null,
+      difficulty_value: resolvedDifficulty(),
       is_completed: local.is_completed,
     });
   }
@@ -66,7 +85,7 @@ function onCheckedUpdate(val) {
     id: local.id,
     order: local.order,
     effort_value: Number(local.effort_value),
-    difficulty_value: hasDifficulty.value ? Number(local.difficulty_value) : null,
+    difficulty_value: resolvedDifficulty(),
     is_completed: local.is_completed,
   });
 
@@ -74,7 +93,7 @@ function onCheckedUpdate(val) {
     id: local.id,
     order: local.order,
     effort_value: Number(local.effort_value),
-    difficulty_value: hasDifficulty.value ? Number(local.difficulty_value) : null,
+    difficulty_value: resolvedDifficulty(),
     is_completed: local.is_completed,
     previous,
   });
@@ -94,8 +113,18 @@ function remove() {
       {{ local.order }}
     </div>
 
+    <Select
+      v-if="hasDifficulty && isZone"
+      v-model.number="local.difficulty_value"
+      :disabled="inputsDisabled"
+      class="h-9 tabular-nums"
+      :aria-label="t('Zone')"
+    >
+      <option :value="0">—</option>
+      <option v-for="zone in zoneOptions" :key="zone" :value="zone">{{ zone }}</option>
+    </Select>
     <Input
-      v-if="hasDifficulty"
+      v-else-if="hasDifficulty"
       v-model.number="local.difficulty_value"
       type="number"
       min="0"
