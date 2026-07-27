@@ -15,6 +15,21 @@ class AdminPageTest extends TestCase
     /**
      * @return array<string, array{0: string, 1: string}>
      */
+    public static function indexPages(): array
+    {
+        return [
+            'dashboard' => ['admin.index', 'Admin/Index'],
+            'equipment' => ['admin.equipment', 'Admin/EquipmentIndex'],
+            'categories' => ['admin.categories', 'Admin/CategoryIndex'],
+            'exercises' => ['admin.exercises', 'Admin/ExerciseIndex'],
+            'workout templates' => ['admin.workout-templates', 'Admin/WorkoutTemplateIndex'],
+            'programs' => ['admin.programs', 'Admin/ProgramIndex'],
+        ];
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string}>
+     */
     public static function createPages(): array
     {
         return [
@@ -38,6 +53,26 @@ class AdminPageTest extends TestCase
             'workout templates' => ['admin.workout-templates.edit', 'Admin/WorkoutTemplateEdit'],
             'programs' => ['admin.programs.edit', 'Admin/ProgramEdit'],
         ];
+    }
+
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\DataProvider('indexPages')]
+    public function admin_can_render_index_page(string $route, string $component): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->get(route($route))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component($component));
+    }
+
+    #[Test]
+    #[\PHPUnit\Framework\Attributes\DataProvider('indexPages')]
+    public function non_admin_cannot_access_index_page(string $route): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get(route($route))->assertForbidden();
     }
 
     #[Test]

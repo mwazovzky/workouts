@@ -63,4 +63,84 @@ describe('Set', () => {
     const updates = wrapper.emitted('update');
     expect(updates.at(-1)[0].difficulty_value).toBeNull();
   });
+
+  function completeButton(wrapper) {
+    return wrapper.find('button[aria-label="Mark set :order as complete"]');
+  }
+
+  it('emits update and completion-toggled when the set is marked complete', async () => {
+    const wrapper = buildWrapper({ difficultyUnit: 'kilograms' });
+
+    await completeButton(wrapper).trigger('click');
+
+    expect(wrapper.emitted('update').at(-1)[0]).toMatchObject({
+      id: 1,
+      order: 1,
+      effort_value: 1800,
+      is_completed: true,
+    });
+    expect(wrapper.emitted('completion-toggled').at(-1)[0]).toMatchObject({
+      is_completed: true,
+      previous: false,
+    });
+  });
+
+  it('reports the previous completion state when unchecking', async () => {
+    const wrapper = buildWrapper({
+      set: { id: 1, order: 1, effort_value: 1800, difficulty_value: null, is_completed: true },
+    });
+
+    await wrapper.find('button[aria-label="Mark set :order as incomplete"]').trigger('click');
+
+    const toggled = wrapper.emitted('completion-toggled').at(-1)[0];
+    expect(toggled.is_completed).toBe(false);
+    expect(toggled.previous).toBe(true);
+  });
+
+  it('cannot be completed while the effort value is zero', () => {
+    const wrapper = buildWrapper({
+      set: { id: 1, order: 1, effort_value: 0, difficulty_value: null, is_completed: false },
+    });
+
+    expect(completeButton(wrapper).attributes('disabled')).toBeDefined();
+  });
+
+  it('locks the inputs once the set is completed', () => {
+    const wrapper = buildWrapper({
+      difficultyUnit: 'kilograms',
+      set: { id: 1, order: 1, effort_value: 1800, difficulty_value: 40, is_completed: true },
+    });
+
+    wrapper.findAll('input').forEach(input => {
+      expect(input.attributes('disabled')).toBeDefined();
+    });
+  });
+
+  it('follows the completion state when the parent updates the set prop', async () => {
+    const wrapper = buildWrapper();
+
+    await wrapper.setProps({
+      set: { id: 1, order: 1, effort_value: 1800, difficulty_value: null, is_completed: true },
+    });
+
+    expect(completeButton(wrapper).exists()).toBe(false);
+    expect(wrapper.find('button[aria-label="Mark set :order as incomplete"]').exists()).toBe(true);
+  });
+
+  it('emits remove with the set identity', async () => {
+    const wrapper = buildWrapper();
+
+    await wrapper.find('button[aria-label="Remove set :order"]').trigger('click');
+
+    expect(wrapper.emitted('remove').at(-1)[0]).toEqual({ id: 1, order: 1 });
+  });
+
+  it('renders no action buttons and disables inputs when not editable', () => {
+    const wrapper = buildWrapper({ editable: false, difficultyUnit: 'kilograms' });
+
+    expect(wrapper.findAll('button')).toHaveLength(0);
+    wrapper.findAll('input').forEach(input => {
+      expect(input.attributes('disabled')).toBeDefined();
+    });
+  });
 });

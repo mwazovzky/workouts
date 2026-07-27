@@ -85,6 +85,13 @@ describe('BottomNav', () => {
     expect(wrapper.text()).not.toContain('Admin');
   });
 
+  it('hides the Admin tab when there is no authenticated user', () => {
+    mockUser = null;
+    const wrapper = buildWrapper();
+
+    expect(wrapper.text()).not.toContain('Admin');
+  });
+
   it('renders the Admin tab for admin users', () => {
     mockUser = { name: 'Jane', is_admin: true };
     const wrapper = buildWrapper();

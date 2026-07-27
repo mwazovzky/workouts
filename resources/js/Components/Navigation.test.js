@@ -61,6 +61,13 @@ describe('Navigation', () => {
     expect(wrapper.text()).not.toContain('Admin');
   });
 
+  it('hides the Admin link when there is no authenticated user', () => {
+    mockUser = null;
+    const wrapper = buildWrapper();
+
+    expect(wrapper.text()).not.toContain('Admin');
+  });
+
   it('shows the Admin link for admin users', () => {
     mockUser = { name: 'Jane', is_admin: true };
     const wrapper = buildWrapper();

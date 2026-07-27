@@ -84,6 +84,112 @@ class HeartRateZoneWithinRangeTest extends TestCase
     }
 
     #[Test]
+    public function it_ignores_a_null_difficulty_value(): void
+    {
+        $exercise = $this->zoneExercise();
+        request()->merge(['activities' => [['exercise_id' => $exercise->id]]]);
+
+        $failed = false;
+        (new HeartRateZoneWithinRange)->validate(
+            'activities.0.sets.0.difficulty_value',
+            null,
+            function () use (&$failed) {
+                $failed = true;
+            },
+        );
+
+        $this->assertFalse($failed);
+    }
+
+    #[Test]
+    public function it_ignores_a_set_whose_activity_has_no_exercise_id(): void
+    {
+        request()->merge(['activities' => [['exercise_id' => null]]]);
+
+        $failed = false;
+        (new HeartRateZoneWithinRange)->validate(
+            'activities.0.sets.0.difficulty_value',
+            9,
+            function () use (&$failed) {
+                $failed = true;
+            },
+        );
+
+        $this->assertFalse($failed);
+    }
+
+    #[Test]
+    public function it_rejects_a_zone_below_the_valid_range(): void
+    {
+        $exercise = $this->zoneExercise();
+        request()->merge(['activities' => [['exercise_id' => $exercise->id]]]);
+
+        $failed = false;
+        (new HeartRateZoneWithinRange)->validate(
+            'activities.0.sets.0.difficulty_value',
+            0,
+            function () use (&$failed) {
+                $failed = true;
+            },
+        );
+
+        $this->assertTrue($failed);
+    }
+
+    #[Test]
+    public function it_rejects_a_non_integer_zone(): void
+    {
+        $exercise = $this->zoneExercise();
+        request()->merge(['activities' => [['exercise_id' => $exercise->id]]]);
+
+        $failed = false;
+        (new HeartRateZoneWithinRange)->validate(
+            'activities.0.sets.0.difficulty_value',
+            2.5,
+            function () use (&$failed) {
+                $failed = true;
+            },
+        );
+
+        $this->assertTrue($failed);
+    }
+
+    #[Test]
+    public function it_rejects_a_non_numeric_zone(): void
+    {
+        $exercise = $this->zoneExercise();
+        request()->merge(['activities' => [['exercise_id' => $exercise->id]]]);
+
+        $failed = false;
+        (new HeartRateZoneWithinRange)->validate(
+            'activities.0.sets.0.difficulty_value',
+            'hard',
+            function () use (&$failed) {
+                $failed = true;
+            },
+        );
+
+        $this->assertTrue($failed);
+    }
+
+    #[Test]
+    public function it_ignores_a_zone_value_for_an_exercise_that_no_longer_exists(): void
+    {
+        request()->merge(['activities' => [['exercise_id' => 999999]]]);
+
+        $failed = false;
+        (new HeartRateZoneWithinRange)->validate(
+            'activities.0.sets.0.difficulty_value',
+            9,
+            function () use (&$failed) {
+                $failed = true;
+            },
+        );
+
+        $this->assertFalse($failed);
+    }
+
+    #[Test]
     public function it_still_validates_a_retired_exercise(): void
     {
         $exercise = $this->zoneExercise();
