@@ -41,21 +41,6 @@
       </template>
     </PageLayout>
 
-    <Modal :show="showForm" @close="closeForm">
-      <div class="p-6">
-        <h2 class="mb-4 text-lg font-medium">
-          {{ editing ? t('Edit program') : t('New program') }}
-        </h2>
-        <ProgramForm
-          v-if="showForm"
-          :program="editing"
-          :templates="templateOptions"
-          @saved="onSaved"
-          @cancel="closeForm"
-        />
-      </div>
-    </Modal>
-
     <ConfirmDialog
       :open="deleteTarget !== null"
       :title="t('Delete program')"
@@ -69,13 +54,12 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/PageLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
-import Modal from '@/Components/Modal.vue';
 import ConfirmDialog from '@/Components/ConfirmDialog.vue';
-import ProgramForm from '@/Components/Admin/ProgramForm.vue';
 import { Card } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Skeleton } from '@/Components/ui/skeleton';
@@ -87,19 +71,12 @@ const { t } = useTranslation();
 const { get, del } = useApi();
 
 const items = ref(null);
-const templateOptions = ref([]);
-const showForm = ref(false);
-const editing = ref(null);
 const deleteTarget = ref(null);
 
 async function load() {
   try {
-    const [programs, templates] = await Promise.all([
-      get('/api/v1/admin/programs'),
-      get('/api/v1/admin/workout-templates'),
-    ]);
-    items.value = programs.data.data;
-    templateOptions.value = templates.data.data;
+    const { data } = await get('/api/v1/admin/programs');
+    items.value = data.data;
   } catch {
     toast.error(t('Failed to load programs'));
     items.value = [];
@@ -109,28 +86,11 @@ async function load() {
 onMounted(load);
 
 function openCreate() {
-  editing.value = null;
-  showForm.value = true;
+  router.visit(route('admin.programs.create'));
 }
 
-async function openEdit(item) {
-  try {
-    const { data } = await get(`/api/v1/admin/programs/${item.id}`);
-    editing.value = data.data;
-    showForm.value = true;
-  } catch {
-    toast.error(t('Failed to load programs'));
-  }
-}
-
-function closeForm() {
-  showForm.value = false;
-  editing.value = null;
-}
-
-function onSaved() {
-  closeForm();
-  load();
+function openEdit(item) {
+  router.visit(route('admin.programs.edit', item.id));
 }
 
 function confirmDelete(item) {

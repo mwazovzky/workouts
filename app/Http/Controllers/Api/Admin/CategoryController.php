@@ -28,6 +28,13 @@ class CategoryController extends Controller
         return CategoryResource::collection($categories);
     }
 
+    public function show(Category $category): CategoryResource
+    {
+        $this->authorize('viewAny', Category::class);
+
+        return new CategoryResource($category);
+    }
+
     public function store(CategoryStoreRequest $request): JsonResponse
     {
         $this->authorize('create', Category::class);

@@ -28,6 +28,15 @@ class ExerciseController extends Controller
         return ExerciseResource::collection($exercises);
     }
 
+    public function show(Exercise $exercise): ExerciseResource
+    {
+        $this->authorize('viewAny', Exercise::class);
+
+        $exercise->load(['categories', 'equipment']);
+
+        return new ExerciseResource($exercise);
+    }
+
     public function store(ExerciseStoreRequest $request): JsonResponse
     {
         $this->authorize('create', Exercise::class);

@@ -28,6 +28,13 @@ class EquipmentController extends Controller
         return EquipmentResource::collection($equipment);
     }
 
+    public function show(Equipment $equipment): EquipmentResource
+    {
+        $this->authorize('viewAny', Equipment::class);
+
+        return new EquipmentResource($equipment);
+    }
+
     public function store(EquipmentStoreRequest $request): JsonResponse
     {
         $this->authorize('create', Equipment::class);

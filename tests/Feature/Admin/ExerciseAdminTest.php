@@ -55,6 +55,37 @@ class ExerciseAdminTest extends TestCase
     }
 
     #[Test]
+    public function admin_can_show_exercise_with_categories(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $categories = Category::factory()->count(2)->create();
+        $exercise = Exercise::factory()->create();
+        $exercise->categories()->sync($categories->pluck('id')->all());
+
+        $this->actingAs($admin)->getJson("/api/v1/admin/exercises/{$exercise->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $exercise->id)
+            ->assertJsonCount(2, 'data.category_ids')
+            ->assertJsonStructure([
+                'data' => [
+                    'id', 'name', 'description', 'equipment_id', 'effort_type',
+                    'rest_time_seconds', 'category_ids', 'categories',
+                    'translations' => ['name' => ['en', 'ru'], 'description' => ['en', 'ru']],
+                ],
+            ]);
+    }
+
+    #[Test]
+    public function non_admin_cannot_show_exercise(): void
+    {
+        $exercise = Exercise::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->getJson("/api/v1/admin/exercises/{$exercise->id}")
+            ->assertForbidden();
+    }
+
+    #[Test]
     public function admin_can_create_exercise_with_categories(): void
     {
         $admin = User::factory()->admin()->create();

@@ -43,6 +43,29 @@ class CategoryAdminTest extends TestCase
     }
 
     #[Test]
+    public function admin_can_show_category(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $category = Category::createWithTranslations(['en' => ['name' => 'Chest'], 'ru' => ['name' => 'Грудь']]);
+
+        $this->actingAs($admin)->getJson("/api/v1/admin/categories/{$category->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $category->id)
+            ->assertJsonPath('data.translations.name.ru', 'Грудь')
+            ->assertJsonStructure(['data' => ['id', 'name', 'translations' => ['name' => ['en', 'ru']]]]);
+    }
+
+    #[Test]
+    public function non_admin_cannot_show_category(): void
+    {
+        $category = Category::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->getJson("/api/v1/admin/categories/{$category->id}")
+            ->assertForbidden();
+    }
+
+    #[Test]
     public function admin_can_create_category(): void
     {
         $admin = User::factory()->admin()->create();

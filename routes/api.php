@@ -41,11 +41,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
         Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
             Route::apiResource('equipment', AdminEquipmentController::class)
-                ->only(['index', 'store', 'update', 'destroy']);
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
             Route::apiResource('categories', AdminCategoryController::class)
-                ->only(['index', 'store', 'update', 'destroy']);
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
             Route::apiResource('exercises', AdminExerciseController::class)
-                ->only(['index', 'store', 'update', 'destroy']);
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
             Route::apiResource('workout-templates', AdminWorkoutTemplateController::class)
                 ->only(['index', 'show', 'store', 'update', 'destroy']);
             Route::apiResource('programs', AdminProgramController::class)

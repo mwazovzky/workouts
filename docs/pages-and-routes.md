@@ -28,6 +28,8 @@ Lookup reference for the app surface area. Detailed behavior belongs in feature 
 | `Admin/WorkoutTemplateIndex` | `/admin/workout-templates` | Auth + verified + admin | Admin | Build workout templates with activities and sets                     |
 | `Admin/ProgramIndex`  | `/admin/programs`         | Auth + verified + admin | Admin   | Assemble programs and schedule templates by weekday                      |
 
+Each catalog resource also has dedicated create and edit pages — `Admin/{Resource}Create` at `/admin/{resource}/create` (route `admin.{resource}.create`) and `Admin/{Resource}Edit` at `/admin/{resource}/{id}/edit` (route `admin.{resource}.edit`) — that host the shared `Components/Admin/*Form` component. Edit pages load the record from the admin REST API on mount.
+
 ## Endpoints
 
 | Action                      | Method   | Path                               | Route Name            | Access                    | Owning Feature  |
@@ -62,14 +64,17 @@ The SPA consumes a versioned REST API under `/api/v1` (Sanctum, stateful). Key g
 | Action              | Method   | Path                                    | Route Name                       | Access                   | Owning Feature |
 | ------------------- | -------- | --------------------------------------- | -------------------------------- | ------------------------ | -------------- |
 | List equipment      | `GET`    | `/api/v1/admin/equipment`               | `api.v1.admin.equipment.index`   | Auth + verified + admin  | Admin          |
+| Show equipment      | `GET`    | `/api/v1/admin/equipment/{equipment}`   | `api.v1.admin.equipment.show`    | Auth + verified + admin  | Admin          |
 | Create equipment    | `POST`   | `/api/v1/admin/equipment`               | `api.v1.admin.equipment.store`   | Auth + verified + admin  | Admin          |
 | Update equipment    | `PUT`    | `/api/v1/admin/equipment/{equipment}`   | `api.v1.admin.equipment.update`  | Auth + verified + admin  | Admin          |
 | Delete equipment    | `DELETE` | `/api/v1/admin/equipment/{equipment}`   | `api.v1.admin.equipment.destroy` | Auth + verified + admin  | Admin          |
 | List categories     | `GET`    | `/api/v1/admin/categories`              | `api.v1.admin.categories.index`  | Auth + verified + admin  | Admin          |
+| Show category       | `GET`    | `/api/v1/admin/categories/{category}`   | `api.v1.admin.categories.show`   | Auth + verified + admin  | Admin          |
 | Create category     | `POST`   | `/api/v1/admin/categories`              | `api.v1.admin.categories.store`  | Auth + verified + admin  | Admin          |
 | Update category     | `PUT`    | `/api/v1/admin/categories/{category}`   | `api.v1.admin.categories.update` | Auth + verified + admin  | Admin          |
 | Delete category     | `DELETE` | `/api/v1/admin/categories/{category}`   | `api.v1.admin.categories.destroy`| Auth + verified + admin  | Admin          |
 | List exercises      | `GET`    | `/api/v1/admin/exercises`               | `api.v1.admin.exercises.index`   | Auth + verified + admin  | Admin          |
+| Show exercise       | `GET`    | `/api/v1/admin/exercises/{exercise}`    | `api.v1.admin.exercises.show`    | Auth + verified + admin  | Admin          |
 | Create exercise     | `POST`   | `/api/v1/admin/exercises`               | `api.v1.admin.exercises.store`   | Auth + verified + admin  | Admin          |
 | Update exercise     | `PUT`    | `/api/v1/admin/exercises/{exercise}`    | `api.v1.admin.exercises.update`  | Auth + verified + admin  | Admin          |
 | Delete exercise     | `DELETE` | `/api/v1/admin/exercises/{exercise}`    | `api.v1.admin.exercises.destroy` | Auth + verified + admin  | Admin          |

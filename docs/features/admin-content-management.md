@@ -7,10 +7,10 @@ App admins create, edit, and delete the shared content catalog: equipment, categ
 1. A user with the `Admin` role sees an **Admin** link in the desktop and mobile navigation. Non-admins never see it.
 2. Admin opens **Admin/Index** and picks a section: Equipment, Categories, Exercises, Workout templates, or Programs.
 3. Each section page lists existing records with **Edit** and **Delete** actions and a **New** button.
-4. Creating or editing opens a modal form. Text fields are captured per locale — English (required) and Russian (optional).
+4. Creating or editing navigates to a dedicated form page (e.g. `admin.categories.create`, `admin.categories.edit`), matching the app's page-based editing pattern (like `WorkoutEdit`). Edit pages load the record by id from the REST API on mount (showing a skeleton), so they work on refresh and deep-link. Text fields are captured per locale — English (required) and Russian (optional).
 5. The workout-template form is a nested builder: add activities (each picks an exercise), and add sets under each activity (effort value plus a difficulty field whose type follows the exercise's equipment — a number for weights, a 1–5 picker for heart-rate zones, nothing for bodyweight).
 6. The program form edits translations plus a weekly schedule: each row assigns a workout template to a weekday (the same template may be scheduled on more than one weekday).
-7. On save the record is persisted through the REST API and the list refreshes.
+7. On save the record is persisted through the REST API and the admin returns to the section list with a success toast.
 8. Deleting prompts a confirmation dialog before removing the record.
 
 ## Business Rules
@@ -34,9 +34,10 @@ App admins create, edit, and delete the shared content catalog: equipment, categ
 
 ## Surface Area
 
-- Pages: `Admin/Index`, `Admin/EquipmentIndex`, `Admin/CategoryIndex`, `Admin/ExerciseIndex`, `Admin/WorkoutTemplateIndex`, `Admin/ProgramIndex`
-- Web route names: `admin.index`, `admin.equipment`, `admin.categories`, `admin.exercises`, `admin.workout-templates`, `admin.programs`
-- API route names: `api.v1.admin.equipment.*`, `api.v1.admin.categories.*`, `api.v1.admin.exercises.*` (`index`, `store`, `update`, `destroy`); `api.v1.admin.workout-templates.*` and `api.v1.admin.programs.*` (`index`, `show`, `store`, `update`, `destroy`)
+- Index pages: `Admin/Index`, `Admin/EquipmentIndex`, `Admin/CategoryIndex`, `Admin/ExerciseIndex`, `Admin/WorkoutTemplateIndex`, `Admin/ProgramIndex`
+- Create/Edit pages: `Admin/{Equipment,Category,Exercise,WorkoutTemplate,Program}{Create,Edit}` (each hosts the shared `Components/Admin/*Form` component)
+- Web route names: `admin.index`, `admin.equipment`, `admin.categories`, `admin.exercises`, `admin.workout-templates`, `admin.programs`, plus `admin.{resource}.create` and `admin.{resource}.edit` for each resource
+- API route names: `api.v1.admin.equipment.*`, `api.v1.admin.categories.*`, `api.v1.admin.exercises.*`, `api.v1.admin.workout-templates.*`, `api.v1.admin.programs.*` — all now expose `index`, `show`, `store`, `update`, `destroy`
 - Full reference: [Pages & Routes](../pages-and-routes.md)
 
 ## Data Notes

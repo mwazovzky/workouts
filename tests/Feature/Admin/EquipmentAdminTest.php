@@ -54,6 +54,29 @@ class EquipmentAdminTest extends TestCase
     }
 
     #[Test]
+    public function admin_can_show_equipment(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $equipment = Equipment::factory()->create(['difficulty_unit' => 'kilograms']);
+
+        $this->actingAs($admin)->getJson("/api/v1/admin/equipment/{$equipment->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $equipment->id)
+            ->assertJsonPath('data.difficulty_unit', 'kilograms')
+            ->assertJsonStructure(['data' => ['id', 'name', 'difficulty_unit', 'translations' => ['name' => ['en', 'ru']]]]);
+    }
+
+    #[Test]
+    public function non_admin_cannot_show_equipment(): void
+    {
+        $equipment = Equipment::factory()->create();
+
+        $this->actingAs(User::factory()->create())
+            ->getJson("/api/v1/admin/equipment/{$equipment->id}")
+            ->assertForbidden();
+    }
+
+    #[Test]
     public function admin_can_create_equipment_with_translations(): void
     {
         $admin = User::factory()->admin()->create();

@@ -39,15 +39,6 @@
       </template>
     </PageLayout>
 
-    <Modal :show="showForm" @close="closeForm">
-      <div class="p-6">
-        <h2 class="mb-4 text-lg font-medium">
-          {{ editing ? t('Edit category') : t('New category') }}
-        </h2>
-        <CategoryForm :category="editing" @saved="onSaved" @cancel="closeForm" />
-      </div>
-    </Modal>
-
     <ConfirmDialog
       :open="deleteTarget !== null"
       :title="t('Delete category')"
@@ -61,13 +52,12 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/PageLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
-import Modal from '@/Components/Modal.vue';
 import ConfirmDialog from '@/Components/ConfirmDialog.vue';
-import CategoryForm from '@/Components/Admin/CategoryForm.vue';
 import { Card } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Skeleton } from '@/Components/ui/skeleton';
@@ -79,8 +69,6 @@ const { t } = useTranslation();
 const { get, del } = useApi();
 
 const items = ref(null);
-const showForm = ref(false);
-const editing = ref(null);
 const deleteTarget = ref(null);
 
 async function load() {
@@ -96,23 +84,11 @@ async function load() {
 onMounted(load);
 
 function openCreate() {
-  editing.value = null;
-  showForm.value = true;
+  router.visit(route('admin.categories.create'));
 }
 
 function openEdit(item) {
-  editing.value = item;
-  showForm.value = true;
-}
-
-function closeForm() {
-  showForm.value = false;
-  editing.value = null;
-}
-
-function onSaved() {
-  closeForm();
-  load();
+  router.visit(route('admin.categories.edit', item.id));
 }
 
 function confirmDelete(item) {

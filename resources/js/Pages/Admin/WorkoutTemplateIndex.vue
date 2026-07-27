@@ -43,21 +43,6 @@
       </template>
     </PageLayout>
 
-    <Modal :show="showForm" @close="closeForm">
-      <div class="p-6">
-        <h2 class="mb-4 text-lg font-medium">
-          {{ editing ? t('Edit workout template') : t('New workout template') }}
-        </h2>
-        <WorkoutTemplateForm
-          v-if="showForm"
-          :template="editing"
-          :exercises="exerciseOptions"
-          @saved="onSaved"
-          @cancel="closeForm"
-        />
-      </div>
-    </Modal>
-
     <ConfirmDialog
       :open="deleteTarget !== null"
       :title="t('Delete workout template')"
@@ -71,13 +56,12 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
+import { router } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import PageLayout from '@/Components/PageLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
-import Modal from '@/Components/Modal.vue';
 import ConfirmDialog from '@/Components/ConfirmDialog.vue';
-import WorkoutTemplateForm from '@/Components/Admin/WorkoutTemplateForm.vue';
 import { Card } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Skeleton } from '@/Components/ui/skeleton';
@@ -89,19 +73,12 @@ const { t } = useTranslation();
 const { get, del } = useApi();
 
 const items = ref(null);
-const exerciseOptions = ref([]);
-const showForm = ref(false);
-const editing = ref(null);
 const deleteTarget = ref(null);
 
 async function load() {
   try {
-    const [templates, exercises] = await Promise.all([
-      get('/api/v1/admin/workout-templates'),
-      get('/api/v1/admin/exercises'),
-    ]);
-    items.value = templates.data.data;
-    exerciseOptions.value = exercises.data.data;
+    const { data } = await get('/api/v1/admin/workout-templates');
+    items.value = data.data;
   } catch {
     toast.error(t('Failed to load workout templates'));
     items.value = [];
@@ -111,28 +88,11 @@ async function load() {
 onMounted(load);
 
 function openCreate() {
-  editing.value = null;
-  showForm.value = true;
+  router.visit(route('admin.workout-templates.create'));
 }
 
-async function openEdit(item) {
-  try {
-    const { data } = await get(`/api/v1/admin/workout-templates/${item.id}`);
-    editing.value = data.data;
-    showForm.value = true;
-  } catch {
-    toast.error(t('Failed to load workout templates'));
-  }
-}
-
-function closeForm() {
-  showForm.value = false;
-  editing.value = null;
-}
-
-function onSaved() {
-  closeForm();
-  load();
+function openEdit(item) {
+  router.visit(route('admin.workout-templates.edit', item.id));
 }
 
 function confirmDelete(item) {

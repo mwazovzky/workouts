@@ -3,8 +3,6 @@ import { computed } from 'vue';
 import { toast } from 'vue-sonner';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { Input } from '@/Components/ui/input';
 import { Select } from '@/Components/ui/select';
 import { Textarea } from '@/Components/ui/textarea';
@@ -261,8 +259,8 @@ function submit() {
     </div>
 
     <div class="flex justify-end gap-2">
-      <SecondaryButton type="button" @click="emit('cancel')">{{ t('Cancel') }}</SecondaryButton>
-      <PrimaryButton :disabled="form.processing">{{ t('Save') }}</PrimaryButton>
+      <Button type="button" variant="outline" @click="emit('cancel')">{{ t('Cancel') }}</Button>
+      <Button type="submit" :disabled="form.processing">{{ t('Save') }}</Button>
     </div>
   </form>
 </template>
