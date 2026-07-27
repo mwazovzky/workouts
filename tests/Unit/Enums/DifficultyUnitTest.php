@@ -23,6 +23,7 @@ class DifficultyUnitTest extends TestCase
             'kilograms' => [DifficultyUnit::Kilograms, 'kg'],
             'pounds' => [DifficultyUnit::Pounds, 'lbs'],
             'plates' => [DifficultyUnit::Plates, 'Plates'],
+            'heart_rate_zone' => [DifficultyUnit::HeartRateZone, 'zone'],
             'none' => [DifficultyUnit::None, ''],
         ];
     }
@@ -41,6 +42,7 @@ class DifficultyUnitTest extends TestCase
             'kilograms' => [DifficultyUnit::Kilograms, 'Weight (kg)'],
             'pounds' => [DifficultyUnit::Pounds, 'Weight (lbs)'],
             'plates' => [DifficultyUnit::Plates, 'Plates'],
+            'heart_rate_zone' => [DifficultyUnit::HeartRateZone, 'Heart-rate zone'],
             'none' => [DifficultyUnit::None, ''],
         ];
     }

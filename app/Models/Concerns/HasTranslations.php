@@ -22,6 +22,12 @@ trait HasTranslations
     public static function bootHasTranslations(): void
     {
         static::deleting(function ($model) {
+            // Keep translations on a soft delete so a "retired" record still
+            // resolves its name/description; only purge on a real/force delete.
+            if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
+                return;
+            }
+
             $model->translations()->delete();
         });
     }
@@ -93,7 +99,10 @@ trait HasTranslations
     /**
      * Create a model with translations in multiple locales.
      *
-     * @param  array<string, array<string, string>>  $translations  e.g. ['en' => ['name' => 'Chest'], 'ru' => ['name' => 'Грудь']]
+     * Blank values (null or empty string) are skipped so reads fall back to
+     * English rather than storing an empty translation.
+     *
+     * @param  array<string, array<string, ?string>>  $translations  e.g. ['en' => ['name' => 'Chest'], 'ru' => ['name' => 'Грудь']]
      * @param  array<string, mixed>  $attributes  Non-translatable model attributes
      */
     public static function createWithTranslations(array $translations, array $attributes = []): static
@@ -102,6 +111,10 @@ trait HasTranslations
 
         foreach ($translations as $locale => $fields) {
             foreach ($fields as $field => $value) {
+                if ($value === null || $value === '') {
+                    continue;
+                }
+
                 $model->translations()->create([
                     'locale' => $locale,
                     'field' => $field,
@@ -111,6 +124,68 @@ trait HasTranslations
         }
 
         return $model;
+    }
+
+    /**
+     * Raw stored value for a field in a specific locale, with no fallback.
+     * Intended for admin edit forms that need each locale's own value.
+     */
+    public function rawTranslation(string $field, string $locale): ?string
+    {
+        return $this->translations
+            ->where('field', $field)
+            ->where('locale', $locale)
+            ->first()?->value;
+    }
+
+    /**
+     * Raw values of a translatable field keyed by every available locale.
+     *
+     * @return array<string, ?string>
+     */
+    public function translationMap(string $field): array
+    {
+        $locales = array_keys(config('app.available_locales', ['en' => 'English']));
+
+        $map = [];
+        foreach ($locales as $locale) {
+            $map[$locale] = $this->rawTranslation($field, $locale);
+        }
+
+        return $map;
+    }
+
+    /**
+     * Update (or create) translations for the given locales and fields.
+     *
+     * A blank value removes that locale's translation so lookups fall back to
+     * English. Only the locales/fields present in the payload are touched.
+     *
+     * @param  array<string, array<string, ?string>>  $translations  e.g. ['en' => ['name' => 'Chest'], 'ru' => ['name' => '']]
+     */
+    public function updateTranslations(array $translations): static
+    {
+        foreach ($translations as $locale => $fields) {
+            foreach ($fields as $field => $value) {
+                if ($value === null || $value === '') {
+                    $this->translations()
+                        ->where('locale', $locale)
+                        ->where('field', $field)
+                        ->delete();
+
+                    continue;
+                }
+
+                $this->translations()->updateOrCreate(
+                    ['locale' => $locale, 'field' => $field],
+                    ['value' => $value],
+                );
+            }
+        }
+
+        $this->load('translations');
+
+        return $this;
     }
 
     /**

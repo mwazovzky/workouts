@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Api\Admin\EquipmentController as AdminEquipmentController;
+use App\Http\Controllers\Api\Admin\ExerciseController as AdminExerciseController;
+use App\Http\Controllers\Api\Admin\ProgramController as AdminProgramController;
+use App\Http\Controllers\Api\Admin\WorkoutTemplateController as AdminWorkoutTemplateController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProgramController;
@@ -33,5 +38,18 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('workouts/{workout}/repeat', [WorkoutController::class, 'repeat'])->name('workouts.repeat');
         Route::patch('workouts/{workout}/save', [WorkoutController::class, 'save'])->name('workouts.save');
         Route::apiResource('workouts', WorkoutController::class)->except(['update']);
+
+        Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+            Route::apiResource('equipment', AdminEquipmentController::class)
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+            Route::apiResource('categories', AdminCategoryController::class)
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+            Route::apiResource('exercises', AdminExerciseController::class)
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+            Route::apiResource('workout-templates', AdminWorkoutTemplateController::class)
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+            Route::apiResource('programs', AdminProgramController::class)
+                ->only(['index', 'show', 'store', 'update', 'destroy']);
+        });
     });
 });

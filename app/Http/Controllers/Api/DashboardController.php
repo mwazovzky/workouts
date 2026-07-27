@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Weekday;
 use App\Enums\WorkoutStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\WorkoutResource;
@@ -95,16 +96,7 @@ class DashboardController extends Controller
 
     private function nextScheduledDate(string $weekday, CarbonImmutable $today): CarbonImmutable
     {
-        $targetDay = match ($weekday) {
-            'Sunday' => 0,
-            'Monday' => 1,
-            'Tuesday' => 2,
-            'Wednesday' => 3,
-            'Thursday' => 4,
-            'Friday' => 5,
-            'Saturday' => 6,
-            default => throw new \InvalidArgumentException("Unsupported weekday [{$weekday}]."),
-        };
+        $targetDay = Weekday::from($weekday)->carbonDayOfWeek();
 
         $daysUntil = ($targetDay - $today->dayOfWeek + 7) % 7;
 

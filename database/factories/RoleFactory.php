@@ -17,7 +17,16 @@ class RoleFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => fake()->unique()->word(),
+            'description' => fake()->sentence(),
         ];
+    }
+
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'Admin',
+            'description' => 'Administrator role with full access',
+        ]);
     }
 }

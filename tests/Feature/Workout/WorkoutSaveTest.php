@@ -581,6 +581,141 @@ class WorkoutSaveTest extends TestCase
     }
 
     // -------------------------------------------------------
+    // Heart-rate zone difficulty
+    // -------------------------------------------------------
+
+    private function zoneWorkout(User $user): array
+    {
+        $workout = Workout::factory()->create(['user_id' => $user->id, 'status' => 'in_progress']);
+        $equipment = \App\Models\Equipment::factory()->heartRateZone()->create();
+        $exercise = Exercise::factory()->create(['equipment_id' => $equipment->id]);
+
+        return [$workout, $exercise];
+    }
+
+    #[Test]
+    public function save_accepts_a_valid_heart_rate_zone(): void
+    {
+        $user = User::factory()->create();
+        [$workout, $exercise] = $this->zoneWorkout($user);
+
+        $response = $this->actingAs($user)->patchJson(
+            '/api/v1/workouts/'.$workout->id.'/save',
+            [
+                'activities' => [
+                    [
+                        'exercise_id' => $exercise->id,
+                        'order' => 1,
+                        'sets' => [
+                            ['order' => 1, 'effort_value' => 1800, 'difficulty_value' => 2],
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $response->assertOk();
+        $this->assertDatabaseHas('sets', ['effort_value' => 1800, 'difficulty_value' => 2]);
+    }
+
+    #[Test]
+    public function save_allows_null_zone_for_a_zone_exercise(): void
+    {
+        $user = User::factory()->create();
+        [$workout, $exercise] = $this->zoneWorkout($user);
+
+        $response = $this->actingAs($user)->patchJson(
+            '/api/v1/workouts/'.$workout->id.'/save',
+            [
+                'activities' => [
+                    [
+                        'exercise_id' => $exercise->id,
+                        'order' => 1,
+                        'sets' => [
+                            ['order' => 1, 'effort_value' => 300, 'difficulty_value' => null],
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $response->assertOk();
+    }
+
+    #[Test]
+    public function save_rejects_a_zone_above_five(): void
+    {
+        $user = User::factory()->create();
+        [$workout, $exercise] = $this->zoneWorkout($user);
+
+        $response = $this->actingAs($user)->patchJson(
+            '/api/v1/workouts/'.$workout->id.'/save',
+            [
+                'activities' => [
+                    [
+                        'exercise_id' => $exercise->id,
+                        'order' => 1,
+                        'sets' => [
+                            ['order' => 1, 'effort_value' => 1800, 'difficulty_value' => 7],
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $response->assertJsonValidationErrors(['activities.0.sets.0.difficulty_value']);
+    }
+
+    #[Test]
+    public function save_rejects_a_zone_below_one(): void
+    {
+        $user = User::factory()->create();
+        [$workout, $exercise] = $this->zoneWorkout($user);
+
+        $response = $this->actingAs($user)->patchJson(
+            '/api/v1/workouts/'.$workout->id.'/save',
+            [
+                'activities' => [
+                    [
+                        'exercise_id' => $exercise->id,
+                        'order' => 1,
+                        'sets' => [
+                            ['order' => 1, 'effort_value' => 1800, 'difficulty_value' => 0],
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $response->assertJsonValidationErrors(['activities.0.sets.0.difficulty_value']);
+    }
+
+    #[Test]
+    public function save_allows_large_weight_for_non_zone_exercise(): void
+    {
+        $user = User::factory()->create();
+        $workout = Workout::factory()->create(['user_id' => $user->id, 'status' => 'in_progress']);
+        $exercise = Exercise::factory()->create();
+
+        $response = $this->actingAs($user)->patchJson(
+            '/api/v1/workouts/'.$workout->id.'/save',
+            [
+                'activities' => [
+                    [
+                        'exercise_id' => $exercise->id,
+                        'order' => 1,
+                        'sets' => [
+                            ['order' => 1, 'effort_value' => 5, 'difficulty_value' => 120],
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $response->assertOk();
+    }
+
+    // -------------------------------------------------------
     // Edge cases
     // -------------------------------------------------------
 

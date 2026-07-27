@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Inertia\Middleware;
@@ -35,7 +36,9 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user()
+                    ? (new UserResource($request->user()->loadMissing('roles')))->resolve()
+                    : null,
             ],
             'locale' => $locale,
             'themePreference' => $request->user()?->theme_preference ?? 'system',

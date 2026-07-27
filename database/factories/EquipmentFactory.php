@@ -58,4 +58,14 @@ class EquipmentFactory extends Factory
             'difficulty_unit' => DifficultyUnit::Pounds,
         ]);
     }
+
+    /**
+     * Cardio equipment measured in heart-rate zones.
+     */
+    public function heartRateZone(): static
+    {
+        return $this->state(fn () => [
+            'difficulty_unit' => DifficultyUnit::HeartRateZone,
+        ]);
+    }
 }

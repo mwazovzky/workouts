@@ -128,6 +128,8 @@ Current project pattern:
 
 Use [WorkoutAuthorizationTest](../tests/Feature/WorkoutAuthorizationTest.php) as the reference pattern.
 
+For role-gated endpoints (e.g. admin catalog management), also cover access by role: assert a non-admin user receives `403`, an admin user succeeds, and a guest receives `401`. Create admins with the `User::factory()->admin()` state. Use [EquipmentAdminTest](../tests/Feature/Admin/EquipmentAdminTest.php) as the reference pattern.
+
 ## Inertia Assertions
 
 For Inertia responses:

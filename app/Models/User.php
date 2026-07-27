@@ -59,4 +59,14 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Program::class);
     }
+
+    public function hasRole(string $name): bool
+    {
+        return $this->roles->contains('name', $name);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('Admin');
+    }
 }

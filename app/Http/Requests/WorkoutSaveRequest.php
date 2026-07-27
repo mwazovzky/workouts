@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Rules\CompletedSetRequiresEffort;
+use App\Rules\HeartRateZoneWithinRange;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -39,7 +40,7 @@ class WorkoutSaveRequest extends FormRequest
             'activities.*.sets.*.id' => ['nullable', 'integer', 'distinct'],
             'activities.*.sets.*.order' => ['required', 'integer', 'min:1'],
             'activities.*.sets.*.effort_value' => ['required', 'integer', 'min:0'],
-            'activities.*.sets.*.difficulty_value' => ['nullable', 'numeric', 'min:0'],
+            'activities.*.sets.*.difficulty_value' => ['nullable', 'numeric', 'min:0', new HeartRateZoneWithinRange],
             'activities.*.sets.*.is_completed' => ['sometimes', 'boolean', new CompletedSetRequiresEffort],
         ];
     }

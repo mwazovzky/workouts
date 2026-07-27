@@ -25,7 +25,7 @@ Browse workout programs, inspect their templates, and enroll.
 - No pagination for programs.
 - No program categories, media, or difficulty metadata.
 - No dashboard summary for enrolled programs or next suggested workout.
-- No admin or user-facing CRUD for programs or templates.
+- No user-facing CRUD for programs or templates (admins manage them via [Admin Content Management](admin-content-management.md)).
 
 ## Surface Area
 

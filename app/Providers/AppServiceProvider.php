@@ -2,12 +2,9 @@
 
 namespace App\Providers;
 
-use App\Http\Resources\UserResource;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
-use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +16,31 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             \App\Services\Workout\WorkoutServiceInterface::class,
             \App\Services\Workout\WorkoutService::class
+        );
+
+        $this->app->bind(
+            \App\Services\Admin\EquipmentServiceInterface::class,
+            \App\Services\Admin\EquipmentService::class
+        );
+
+        $this->app->bind(
+            \App\Services\Admin\CategoryServiceInterface::class,
+            \App\Services\Admin\CategoryService::class
+        );
+
+        $this->app->bind(
+            \App\Services\Admin\ExerciseServiceInterface::class,
+            \App\Services\Admin\ExerciseService::class
+        );
+
+        $this->app->bind(
+            \App\Services\Admin\WorkoutTemplateServiceInterface::class,
+            \App\Services\Admin\WorkoutTemplateService::class
+        );
+
+        $this->app->bind(
+            \App\Services\Admin\ProgramServiceInterface::class,
+            \App\Services\Admin\ProgramService::class
         );
     }
 
@@ -37,15 +59,5 @@ class AppServiceProvider extends ServiceProvider
             'equipment' => \App\Models\Equipment::class,
             'program' => \App\Models\Program::class,
         ]);
-
-        // Share authenticated user info with Inertia pages
-        Inertia::share('auth.user', function (Request $request) {
-            $user = $request->user();
-            if (! $user) {
-                return null;
-            }
-
-            return (new UserResource($user))->resolve();
-        });
     }
 }

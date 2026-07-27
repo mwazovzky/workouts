@@ -113,6 +113,88 @@ class HasTranslationsTest extends TestCase
     }
 
     #[Test]
+    public function create_with_translations_skips_blank_values(): void
+    {
+        $exercise = Exercise::createWithTranslations([
+            'en' => ['name' => 'Bicycle Training', 'description' => 'Steady-state cycling.'],
+            'ru' => ['name' => 'Велотренировка', 'description' => null],
+        ], [
+            'equipment_id' => Equipment::factory()->create()->id,
+            'rest_time_seconds' => 0,
+        ]);
+
+        $this->assertDatabaseMissing('translations', [
+            'translatable_id' => $exercise->id,
+            'locale' => 'ru',
+            'field' => 'description',
+        ]);
+        $this->assertDatabaseHas('translations', [
+            'translatable_id' => $exercise->id,
+            'locale' => 'ru',
+            'field' => 'name',
+            'value' => 'Велотренировка',
+        ]);
+
+        App::setLocale('ru');
+        $this->assertEquals('Steady-state cycling.', $exercise->description);
+    }
+
+    #[Test]
+    public function update_translations_updates_existing_and_creates_missing(): void
+    {
+        $category = Category::createWithTranslations([
+            'en' => ['name' => 'Chest'],
+            'ru' => ['name' => 'Грудь'],
+        ]);
+
+        $category->updateTranslations([
+            'en' => ['name' => 'Upper Chest'],
+            'ru' => ['name' => 'Верхняя грудь'],
+        ]);
+
+        $this->assertEquals('Upper Chest', $category->translated('name', 'en'));
+        $this->assertEquals('Верхняя грудь', $category->translated('name', 'ru'));
+        $this->assertDatabaseCount('translations', 2);
+    }
+
+    #[Test]
+    public function update_translations_creates_translation_for_new_locale(): void
+    {
+        $category = Category::createWithTranslations([
+            'en' => ['name' => 'Chest'],
+        ]);
+
+        $category->updateTranslations([
+            'ru' => ['name' => 'Грудь'],
+        ]);
+
+        $this->assertEquals('Грудь', $category->translated('name', 'ru'));
+        $this->assertDatabaseCount('translations', 2);
+    }
+
+    #[Test]
+    public function update_translations_removes_blank_values_for_fallback(): void
+    {
+        $category = Category::createWithTranslations([
+            'en' => ['name' => 'Chest'],
+            'ru' => ['name' => 'Грудь'],
+        ]);
+
+        $category->updateTranslations([
+            'ru' => ['name' => ''],
+        ]);
+
+        $this->assertDatabaseMissing('translations', [
+            'translatable_id' => $category->id,
+            'locale' => 'ru',
+            'field' => 'name',
+        ]);
+
+        App::setLocale('ru');
+        $this->assertEquals('Chest', $category->translated('name'));
+    }
+
+    #[Test]
     public function scope_where_translated_filters_by_value(): void
     {
         Category::createWithTranslations(['en' => ['name' => 'Chest'], 'ru' => ['name' => 'Грудь']]);
