@@ -3,10 +3,12 @@
 namespace Tests\Feature\Workout;
 
 use App\Models\Activity;
+use App\Models\Equipment;
 use App\Models\Exercise;
 use App\Models\Set;
 use App\Models\User;
 use App\Models\Workout;
+use App\Models\WorkoutTemplate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -200,6 +202,172 @@ class WorkoutSaveTest extends TestCase
             'workout_id' => $workout->id,
             'exercise_id' => $exercise2->id,
             'order' => 2,
+        ]);
+    }
+
+    #[Test]
+    public function save_appending_an_activity_leaves_the_source_template_untouched(): void
+    {
+        $user = User::factory()->create();
+        $template = WorkoutTemplate::factory()->create();
+        $exercise = Exercise::factory()->create();
+        $addedExercise = Exercise::factory()->create();
+
+        $templateActivity = Activity::factory()->for($template, 'workout')->create([
+            'exercise_id' => $exercise->id,
+            'order' => 1,
+        ]);
+        Set::factory()->for($templateActivity, 'activity')->create(['order' => 1]);
+
+        $workout = $this->actingAs($user)
+            ->postJson('/api/v1/workouts', ['workout_template_id' => $template->id])
+            ->assertCreated();
+
+        $workoutId = $workout->json('data.id');
+        $activityId = Activity::query()
+            ->where('workout_type', 'workout')
+            ->where('workout_id', $workoutId)
+            ->value('id');
+
+        $response = $this->actingAs($user)->patchJson(
+            '/api/v1/workouts/'.$workoutId.'/save',
+            [
+                'activities' => [
+                    [
+                        'id' => $activityId,
+                        'exercise_id' => $exercise->id,
+                        'order' => 1,
+                        'sets' => [
+                            ['order' => 1, 'effort_value' => 5, 'difficulty_value' => 50],
+                        ],
+                    ],
+                    [
+                        'exercise_id' => $addedExercise->id,
+                        'order' => 2,
+                        'sets' => [
+                            ['order' => 1, 'effort_value' => 12, 'difficulty_value' => 20],
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $response->assertOk();
+
+        $this->assertDatabaseHas('activities', [
+            'workout_type' => 'workout',
+            'workout_id' => $workoutId,
+            'exercise_id' => $addedExercise->id,
+            'order' => 2,
+        ]);
+
+        $this->assertSame(1, $template->activities()->count());
+        $this->assertDatabaseHas('activities', [
+            'id' => $templateActivity->id,
+            'workout_type' => 'workout_template',
+            'workout_id' => $template->id,
+            'exercise_id' => $exercise->id,
+            'order' => 1,
+        ]);
+        $this->assertDatabaseMissing('activities', [
+            'workout_type' => 'workout_template',
+            'exercise_id' => $addedExercise->id,
+        ]);
+    }
+
+    #[Test]
+    public function save_response_exposes_persisted_ids_and_exercise_details_for_new_activities(): void
+    {
+        $user = User::factory()->create();
+        $workout = Workout::factory()->create(['user_id' => $user->id, 'status' => 'in_progress']);
+        $equipment = Equipment::factory()->withTranslation('name', 'Barbell')->create();
+        $exercise = Exercise::factory()
+            ->withTranslation('name', 'Bench Press')
+            ->for($equipment)
+            ->create();
+
+        $response = $this->actingAs($user)->patchJson(
+            '/api/v1/workouts/'.$workout->id.'/save',
+            [
+                'activities' => [
+                    [
+                        'exercise_id' => $exercise->id,
+                        'order' => 1,
+                        'sets' => [
+                            ['order' => 1, 'effort_value' => 10, 'difficulty_value' => 60],
+                        ],
+                    ],
+                ],
+            ],
+        );
+
+        $response->assertOk();
+
+        $activity = $response->json('data.activities.0');
+        $this->assertNotNull($activity['id']);
+        $this->assertNotNull($activity['sets'][0]['id']);
+        $this->assertSame('Bench Press', $activity['exercise_name']);
+        $this->assertSame('Barbell', $activity['exercise_equipment_name']);
+        $this->assertSame('kilograms', $activity['exercise_difficulty_unit']);
+    }
+
+    #[Test]
+    public function save_twice_with_returned_ids_does_not_duplicate_the_added_activity(): void
+    {
+        $user = User::factory()->create();
+        $workout = Workout::factory()->create(['user_id' => $user->id, 'status' => 'in_progress']);
+        $exercise = Exercise::factory()->create();
+
+        $activity = Activity::factory()->for($workout, 'workout')->create([
+            'exercise_id' => $exercise->id,
+            'order' => 1,
+        ]);
+        $set = Set::factory()->for($activity, 'activity')->create(['order' => 1]);
+
+        $addedExercise = Exercise::factory()->create();
+
+        $payload = [
+            'activities' => [
+                [
+                    'id' => $activity->id,
+                    'exercise_id' => $exercise->id,
+                    'order' => 1,
+                    'sets' => [
+                        ['id' => $set->id, 'order' => 1, 'effort_value' => 5, 'difficulty_value' => 50],
+                    ],
+                ],
+                [
+                    'exercise_id' => $addedExercise->id,
+                    'order' => 2,
+                    'sets' => [
+                        ['order' => 1, 'effort_value' => 12, 'difficulty_value' => 20],
+                    ],
+                ],
+            ],
+        ];
+
+        $first = $this->actingAs($user)->patchJson('/api/v1/workouts/'.$workout->id.'/save', $payload);
+        $first->assertOk();
+
+        $addedActivity = $first->json('data.activities.1');
+        $payload['activities'][1]['id'] = $addedActivity['id'];
+        $payload['activities'][1]['sets'][0]['id'] = $addedActivity['sets'][0]['id'];
+
+        // Replaying the response IDs must update the same rows, not recreate them.
+        $second = $this->actingAs($user)->patchJson('/api/v1/workouts/'.$workout->id.'/save', $payload);
+        $second->assertOk();
+
+        $this->assertDatabaseCount('activities', 2);
+        $this->assertDatabaseCount('sets', 2);
+        $this->assertDatabaseHas('activities', [
+            'id' => $addedActivity['id'],
+            'exercise_id' => $addedExercise->id,
+            'order' => 2,
+        ]);
+        $this->assertDatabaseHas('sets', [
+            'id' => $addedActivity['sets'][0]['id'],
+            'activity_id' => $addedActivity['id'],
+            'effort_value' => 12,
         ]);
     }
 

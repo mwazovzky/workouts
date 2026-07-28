@@ -131,6 +131,9 @@ class WorkoutService implements WorkoutServiceInterface
         return $workout->load([
             'activities' => fn ($query) => $query->orderBy('order'),
             'activities.sets' => fn ($query) => $query->orderBy('order'),
+            'activities.exercise.equipment.translations',
+            'activities.exercise.categories.translations',
+            'activities.exercise.translations',
         ]);
     }
 

@@ -61,21 +61,21 @@ function onSetUpdate(set) {
 }
 
 function onSetRemove({ id, order }) {
-  emits('remove-set', { activityId: props.activity.id, id, order });
+  emits('remove-set', { activityKey: props.activity.clientKey, id, order });
 }
 
 function onSetCompletionToggled(payload) {
   // Ensure parent state reflects the toggled completion before we ask it to persist.
   onSetUpdate(payload);
-  emits('set-completion-toggled', { activityId: props.activity.id, ...payload });
+  emits('set-completion-toggled', { activityKey: props.activity.clientKey, ...payload });
 }
 
 function addSet() {
-  emits('add-set', { activityId: props.activity.id });
+  emits('add-set', { activityKey: props.activity.clientKey });
 }
 
 function removeActivity() {
-  emits('remove-activity', props.activity.id);
+  emits('remove-activity', props.activity.clientKey);
 }
 </script>
 

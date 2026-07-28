@@ -16,6 +16,7 @@ class ExerciseResource extends JsonResource
             'name' => $this->name ?? null,
             'description' => $this->description ?? null,
             'equipment_id' => $this->equipment_id,
+            'equipment_name' => $this->whenLoaded('equipment', fn () => $this->equipment->name),
             'effort_type' => $this->effort_type->value,
             'effort_label' => $this->effort_type->columnLabel(),
             'difficulty_unit' => $this->whenLoaded('equipment', fn () => $this->equipment->difficulty_unit->value),

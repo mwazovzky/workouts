@@ -39,7 +39,7 @@ function forward(evName, payload) {
   >
     <Activity
       v-for="element in activities"
-      :key="element.id"
+      :key="element.clientKey ?? element.id"
       :activity="element"
       :editable="editable"
       :reorderable="reorderable"

@@ -7,11 +7,12 @@ Start workouts from templates, edit activities and sets, save progress, complete
 1. User starts a workout from a template, which clones template activities and sets into a new `in_progress` workout.
 2. User lands on **WorkoutEdit** and manages the full workout client-side before saving.
 3. User can update effort and difficulty values, toggle set completion, remove sets, remove activities, and reorder activities.
-4. Save sends the full activities-and-sets payload in one bulk request.
-5. Complete marks the workout as `completed` and redirects to **WorkoutShow**.
-6. **WorkoutIndex** shows the user's workout history, and **WorkoutShow** loads activities lazily.
-7. User can repeat a completed workout, which creates a fresh `in_progress` copy.
-8. User can delete a workout, which removes its activities and sets in the same transaction.
+4. User can add an activity by picking an exercise from a searchable catalog. It is appended to the end of the list with one blank set, and can be reordered like any other activity.
+5. Save sends the full activities-and-sets payload in one bulk request.
+6. Complete marks the workout as `completed` and redirects to **WorkoutShow**.
+7. **WorkoutIndex** shows the user's workout history, and **WorkoutShow** loads activities lazily.
+8. User can repeat a completed workout, which creates a fresh `in_progress` copy.
+9. User can delete a workout, which removes its activities and sets in the same transaction.
 
 ## Business Rules
 
@@ -29,7 +30,10 @@ Start workouts from templates, edit activities and sets, save progress, complete
 - Sets omitted from an activity payload are deleted.
 - Activity IDs must belong to the target workout.
 - Set IDs must belong to the target activity.
+- Activities added during editing have no ID and are created on save. They belong to the workout copy only and never modify the source template.
+- Only active exercises are offered in the picker. Retired (soft-deleted) exercises are excluded so they cannot be added to new activities, while existing activities still resolve them.
 - Frontend normalizes activity and set order before sending the payload.
+- The save response returns persisted IDs, so a subsequent save updates the same rows instead of recreating them.
 - A workout must retain at least one activity, and each activity must retain at least one set.
 - Completed sets must have `effort_value > 0`.
 - Start, repeat, save, and delete operations run in database transactions.
@@ -40,7 +44,8 @@ Start workouts from templates, edit activities and sets, save progress, complete
 - No manual workout creation without a template.
 - No reopen flow after completion.
 - No rename, notes, comments, or duration tracking.
-- No exercise substitution or adding brand-new activities during editing.
+- No exercise substitution. An existing activity's exercise cannot be changed; it must be removed and re-added.
+- No creating custom exercises. Added activities can only use exercises from the shared catalog.
 - No sorting or filtering on workout history beyond newest updated first.
 - No workout analytics such as volume, PRs, or summaries.
 - No undo after deleting activities once changes are saved.

@@ -63,6 +63,7 @@ The SPA consumes a versioned REST API under `/api/v1` (Sanctum, stateful). Key g
 
 | Action              | Method   | Path                                    | Route Name                       | Access                   | Owning Feature |
 | ------------------- | -------- | --------------------------------------- | -------------------------------- | ------------------------ | -------------- |
+| List exercises      | `GET`    | `/api/v1/exercises`                     | `api.v1.exercises.index`         | Auth + verified          | Workout Logging |
 | List equipment      | `GET`    | `/api/v1/admin/equipment`               | `api.v1.admin.equipment.index`   | Auth + verified + admin  | Admin          |
 | Show equipment      | `GET`    | `/api/v1/admin/equipment/{equipment}`   | `api.v1.admin.equipment.show`    | Auth + verified + admin  | Admin          |
 | Create equipment    | `POST`   | `/api/v1/admin/equipment`               | `api.v1.admin.equipment.store`   | Auth + verified + admin  | Admin          |
