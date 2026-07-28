@@ -29,6 +29,15 @@ describe('Set', () => {
     expect(wrapper.find('input[type="number"][step="0.5"]').exists()).toBe(false);
   });
 
+  it('right-aligns the zone select to match the other numeric columns', () => {
+    const wrapper = buildWrapper({ difficultyUnit: 'heart_rate_zone' });
+
+    const classes = wrapper.find('select').classes();
+    // pr-8 keeps the value clear of the native dropdown chevron.
+    expect(classes).toContain('text-right');
+    expect(classes).toContain('pr-8');
+  });
+
   it('renders a numeric difficulty input for weight units', () => {
     const wrapper = buildWrapper({ difficultyUnit: 'kilograms' });
 

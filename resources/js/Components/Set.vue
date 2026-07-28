@@ -117,7 +117,7 @@ function remove() {
       v-if="hasDifficulty && isZone"
       v-model.number="local.difficulty_value"
       :disabled="inputsDisabled"
-      class="h-9 tabular-nums"
+      class="h-9 text-right pr-8 tabular-nums"
       :aria-label="t('Zone')"
     >
       <option :value="0">—</option>
