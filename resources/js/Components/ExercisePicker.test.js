@@ -89,6 +89,32 @@ describe('ExercisePicker', () => {
     expect(wrapper.emitted('close')).toBeTruthy();
   });
 
+  // ExerciseResource omits `categories` unless the relation is loaded, exposes
+  // `equipment_name` the same way, and returns a null `name` when the
+  // translation is missing — so the picker has to survive all three.
+  it('renders exercises with missing name, equipment and categories', async () => {
+    const wrapper = buildWrapper({
+      exercises: [
+        { id: 9, name: null, equipment_name: null },
+        { id: 10, name: 'Sled Push' },
+      ],
+    });
+
+    const rows = wrapper.findAll('li button');
+    expect(rows).toHaveLength(2);
+    // Nothing to describe for either row, so both fall back to the placeholder.
+    expect(rows[0].text()).toContain('—');
+    expect(rows[1].text()).toContain('Sled Push');
+    expect(rows[1].text()).toContain('—');
+
+    // Filtering must not throw on the null name, and must not match it.
+    await wrapper.find('input[type="search"]').setValue('sled');
+
+    const filtered = wrapper.findAll('li button');
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].text()).toContain('Sled Push');
+  });
+
   it('resets the search query when reopened', async () => {
     const wrapper = buildWrapper();
 

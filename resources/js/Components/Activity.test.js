@@ -6,6 +6,7 @@ vi.mock('@/composables/useTranslation', () => ({
 }));
 
 import Activity from '@/Components/Activity.vue';
+import Set from '@/Components/Set.vue';
 
 describe('Activity', () => {
   function buildWrapper(props = {}) {
@@ -89,6 +90,61 @@ describe('Activity', () => {
     await findByLabel(wrapper, 'Add set').trigger('click');
 
     expect(wrapper.emitted('add-set').at(-1)[0]).toEqual({ activityKey: 'activity-9' });
+  });
+
+  it('emits both an activity update and the toggle when a set is completed', async () => {
+    const wrapper = buildWrapper();
+
+    await findByLabel(wrapper, 'Mark set :order as complete').trigger('click');
+
+    // The parent state is updated first, so the toggle acts on fresh sets.
+    const updated = wrapper.emitted('update-activity').at(-1)[0];
+    expect(updated.clientKey).toBe('activity-7');
+    expect(updated.sets[0]).toMatchObject({ id: 1, order: 1, is_completed: true });
+    expect(updated.sets[1]).toMatchObject({ id: 2, is_completed: false });
+
+    expect(wrapper.emitted('set-completion-toggled').at(-1)[0]).toMatchObject({
+      activityKey: 'activity-7',
+      id: 1,
+      order: 1,
+      is_completed: true,
+    });
+  });
+
+  // Sets on a newly added activity have no id until the first save, so updates
+  // have to be matched by order instead.
+  it('matches an updated set by order when it has no id yet', async () => {
+    const wrapper = buildWrapper({
+      activity: {
+        clientKey: 'activity-9',
+        id: null,
+        exercise_id: 5,
+        exercise_name: 'Push-up',
+        rest_time_seconds: null,
+        exercise_equipment_name: 'Bodyweight',
+        exercise_category_names: [],
+        exercise_effort_type: 'repetitions',
+        exercise_effort_label: 'Reps',
+        exercise_difficulty_unit: 'none',
+        exercise_difficulty_label: '',
+        sets: [
+          { id: null, order: 1, effort_value: 0, difficulty_value: null, is_completed: false },
+          { id: null, order: 2, effort_value: 0, difficulty_value: null, is_completed: false },
+        ],
+      },
+    });
+
+    await wrapper.findAllComponents(Set)[1].vm.$emit('update', {
+      id: null,
+      order: 2,
+      effort_value: 15,
+      difficulty_value: null,
+      is_completed: false,
+    });
+
+    const updated = wrapper.emitted('update-activity').at(-1)[0];
+    expect(updated.sets[0].effort_value).toBe(0);
+    expect(updated.sets[1].effort_value).toBe(15);
   });
 
   it('hides the edit controls when not editable', () => {
