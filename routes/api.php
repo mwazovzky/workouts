@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Admin\ExerciseController as AdminExerciseController
 use App\Http\Controllers\Api\Admin\ProgramController as AdminProgramController;
 use App\Http\Controllers\Api\Admin\WorkoutTemplateController as AdminWorkoutTemplateController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\ExerciseController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProgramController;
 use App\Http\Controllers\Api\TokenController;
@@ -33,6 +34,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('programs/{program}/enroll', [ProgramController::class, 'enroll'])->name('programs.enroll');
 
         Route::get('workout-templates/{id}', [WorkoutTemplateController::class, 'show'])->name('workout-templates.show');
+
+        Route::get('exercises', [ExerciseController::class, 'index'])->name('exercises.index');
 
         Route::post('workouts/{workout}/complete', [WorkoutController::class, 'complete'])->name('workouts.complete');
         Route::post('workouts/{workout}/repeat', [WorkoutController::class, 'repeat'])->name('workouts.repeat');

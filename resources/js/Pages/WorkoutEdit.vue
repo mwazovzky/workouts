@@ -72,6 +72,13 @@
             @remove-activity="onRemoveActivity"
           />
         </div>
+
+        <div v-if="isEditable" class="mt-3 max-w-md mx-auto">
+          <Button variant="outline" class="w-full" @click="openExercisePicker">
+            <Plus class="h-4 w-4" />
+            {{ t('Add activity') }}
+          </Button>
+        </div>
       </template>
     </PageLayout>
 
@@ -101,6 +108,14 @@
       </div>
     </WorkoutFooter>
 
+    <ExercisePicker
+      :show="isPickerOpen"
+      :exercises="exercises"
+      :loading="isLoadingExercises"
+      @select="onExerciseSelected"
+      @close="isPickerOpen = false"
+    />
+
     <ConfirmDialog
       :open="confirmDialog.open"
       :title="confirmDialog.title"
@@ -119,6 +134,7 @@ import { toast } from 'vue-sonner';
 import { useApi } from '@/composables/useApi';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import ActivitiesList from '@/Components/ActivitiesList.vue';
+import ExercisePicker from '@/Components/ExercisePicker.vue';
 import WorkoutCard from '@/Components/WorkoutCard.vue';
 import WorkoutFooter from '@/Components/WorkoutFooter.vue';
 import ConfirmDialog from '@/Components/ConfirmDialog.vue';
@@ -127,10 +143,18 @@ import PageHeader from '@/Components/PageHeader.vue';
 import { Button } from '@/Components/ui/button';
 import { Card } from '@/Components/ui/card';
 import { Skeleton } from '@/Components/ui/skeleton';
+import { Plus } from 'lucide-vue-next';
 import { useTranslation } from '@/composables/useTranslation';
 
 const { t } = useTranslation();
 const { get, patch, post } = useApi();
+
+/**
+ * Activities are identified client-side by a stable key rather than by `id`,
+ * because activities added during editing have no `id` until they are saved.
+ */
+let clientKeySequence = 0;
+const nextClientKey = () => `activity-${++clientKeySequence}`;
 
 const props = defineProps({
   id: { type: Number, required: true },
@@ -149,6 +173,12 @@ const isFinishing = ref(false);
 const isDirty = ref(false);
 const skipNavigationGuard = ref(false);
 const isRedirectingAfterLoadError = ref(false);
+
+// Exercise picker state — the catalog is fetched lazily on first open.
+const isPickerOpen = ref(false);
+const isLoadingExercises = ref(false);
+const exercises = ref([]);
+const hasLoadedExercises = ref(false);
 
 // Confirm dialog state
 const confirmDialog = ref({
@@ -207,6 +237,46 @@ function onBeforeUnload(e) {
 
 let removeInertiaListener = null;
 
+/**
+ * Map an API activities payload onto the local editing shape.
+ *
+ * When `existing` is supplied (rehydrating after a save) the client keys are
+ * reused positionally, so already-rendered activity cards are not remounted.
+ */
+function normalizeActivities(payload, existing = []) {
+  return (payload ?? []).map((a, index) => ({
+    clientKey: existing[index]?.clientKey ?? nextClientKey(),
+    id: a.id,
+    exercise_id: a.exercise_id ?? null,
+    exercise_name: a.exercise_name ?? '',
+    rest_time_seconds: a.rest_time_seconds ?? null,
+    exercise_equipment_name: a.exercise_equipment_name ?? null,
+    exercise_category_names: a.exercise_category_names ?? [],
+    exercise_effort_type: a.exercise_effort_type ?? 'repetitions',
+    exercise_effort_label: a.exercise_effort_label ?? '',
+    exercise_difficulty_unit: a.exercise_difficulty_unit ?? null,
+    exercise_difficulty_label: a.exercise_difficulty_label ?? '',
+    sets: (a.sets ?? []).map(s => ({
+      id: s.id ?? null,
+      order: s.order,
+      effort_value: s.effort_value,
+      difficulty_value: s.difficulty_value,
+      is_completed: s.is_completed ?? false,
+    })),
+  }));
+}
+
+/**
+ * Seed the difficulty value for a brand-new set based on the exercise's unit:
+ * zero for a weight unit, null when there is no difficulty field or the unit is
+ * a heart-rate zone (which has no sensible default).
+ */
+function defaultDifficultyValue(difficultyUnit) {
+  const hasDifficulty = difficultyUnit && difficultyUnit !== 'none';
+
+  return hasDifficulty && difficultyUnit !== 'heart_rate_zone' ? 0 : null;
+}
+
 onMounted(async () => {
   window.addEventListener('beforeunload', onBeforeUnload);
   removeInertiaListener = router.on('before', event => {
@@ -225,25 +295,7 @@ onMounted(async () => {
     workoutId.value = w.id ?? null;
     workoutStatus.value = w.status ?? null;
     workoutOwnerId.value = w.user_id ?? null;
-    activities.value = (w.activities ?? []).map(a => ({
-      id: a.id,
-      exercise_id: a.exercise_id ?? null,
-      exercise_name: a.exercise_name ?? '',
-      rest_time_seconds: a.rest_time_seconds ?? null,
-      exercise_equipment_name: a.exercise_equipment_name ?? null,
-      exercise_category_names: a.exercise_category_names ?? [],
-      exercise_effort_type: a.exercise_effort_type ?? 'repetitions',
-      exercise_effort_label: a.exercise_effort_label ?? '',
-      exercise_difficulty_unit: a.exercise_difficulty_unit ?? null,
-      exercise_difficulty_label: a.exercise_difficulty_label ?? '',
-      sets: (a.sets ?? []).map(s => ({
-        id: s.id ?? null,
-        order: s.order,
-        effort_value: s.effort_value,
-        difficulty_value: s.difficulty_value,
-        is_completed: s.is_completed ?? false,
-      })),
-    }));
+    activities.value = normalizeActivities(w.activities);
   } catch {
     toast.error(t('Failed to load workout'));
     skipNavigationGuard.value = true;
@@ -291,7 +343,10 @@ async function saveWorkout({ onSuccess, onError } = {}) {
   skipNavigationGuard.value = true;
 
   try {
-    await patch(`/api/v1/workouts/${workoutId.value}/save`, buildSavePayload());
+    const { data } = await patch(`/api/v1/workouts/${workoutId.value}/save`, buildSavePayload());
+    // Adopt the persisted IDs so a subsequent save updates rows instead of
+    // deleting and recreating everything that was added client-side.
+    activities.value = normalizeActivities(data?.data?.activities, activities.value);
     isDirty.value = false;
     toast.success(t('Workout saved'));
     onSuccess?.();
@@ -347,27 +402,26 @@ function onSetCompletionToggled() {
   markDirty();
 }
 
-function onAddSet({ activityId }) {
-  const activity = activities.value.find(a => a.id === activityId);
+function onAddSet({ activityKey }) {
+  const activity = activities.value.find(a => a.clientKey === activityKey);
   if (!activity) return;
 
   const lastSet = activity.sets.length ? activity.sets[activity.sets.length - 1] : null;
   const maxOrder = activity.sets.length ? Math.max(...activity.sets.map(s => s.order)) : 0;
-  const hasDifficulty =
-    activity.exercise_difficulty_unit && activity.exercise_difficulty_unit !== 'none';
-  const isZone = activity.exercise_difficulty_unit === 'heart_rate_zone';
   activity.sets.push({
     id: null,
     order: maxOrder + 1,
     effort_value: lastSet ? lastSet.effort_value : 0,
-    difficulty_value: lastSet ? lastSet.difficulty_value : hasDifficulty && !isZone ? 0 : null,
+    difficulty_value: lastSet
+      ? lastSet.difficulty_value
+      : defaultDifficultyValue(activity.exercise_difficulty_unit),
     is_completed: false,
   });
   markDirty();
 }
 
-function onRemoveSet({ activityId, id, order }) {
-  const activity = activities.value.find(a => a.id === activityId);
+function onRemoveSet({ activityKey, id, order }) {
+  const activity = activities.value.find(a => a.clientKey === activityKey);
   if (!activity) return;
 
   // If this is the last set, confirm and remove the entire activity
@@ -377,7 +431,7 @@ function onRemoveSet({ activityId, id, order }) {
       description: t('Removing the last set will delete this activity.'),
       confirmLabel: t('Remove'),
       onConfirm: () => {
-        activities.value = activities.value.filter(a => a.id !== activityId);
+        activities.value = activities.value.filter(a => a.clientKey !== activityKey);
         markDirty();
       },
     });
@@ -394,14 +448,14 @@ function onRemoveSet({ activityId, id, order }) {
 }
 
 function onUpdateActivity(updated) {
-  const idx = activities.value.findIndex(a => a.id === updated.id);
+  const idx = activities.value.findIndex(a => a.clientKey === updated.clientKey);
   if (idx !== -1) {
     activities.value[idx] = updated;
     markDirty();
   }
 }
 
-function onRemoveActivity(activityId) {
+function onRemoveActivity(activityKey) {
   if (!isEditable.value) {
     toast.error(t('This workout cannot be edited'));
 
@@ -417,9 +471,59 @@ function onRemoveActivity(activityId) {
     description: t('This action cannot be undone.'),
     confirmLabel: t('Delete'),
     onConfirm: () => {
-      activities.value = activities.value.filter(a => a.id !== activityId);
+      activities.value = activities.value.filter(a => a.clientKey !== activityKey);
       markDirty();
     },
   });
+}
+
+async function openExercisePicker() {
+  isPickerOpen.value = true;
+
+  if (hasLoadedExercises.value) {
+    return;
+  }
+
+  isLoadingExercises.value = true;
+
+  try {
+    const { data } = await get('/api/v1/exercises');
+    exercises.value = data.data ?? [];
+    hasLoadedExercises.value = true;
+  } catch {
+    toast.error(t('Failed to load exercises'));
+    isPickerOpen.value = false;
+  } finally {
+    isLoadingExercises.value = false;
+  }
+}
+
+function onExerciseSelected(exercise) {
+  isPickerOpen.value = false;
+
+  activities.value.push({
+    clientKey: nextClientKey(),
+    id: null,
+    exercise_id: exercise.id,
+    exercise_name: exercise.name ?? '',
+    rest_time_seconds: exercise.rest_time_seconds ?? null,
+    exercise_equipment_name: exercise.equipment_name ?? null,
+    exercise_category_names: (exercise.categories ?? []).map(c => c.name),
+    exercise_effort_type: exercise.effort_type ?? 'repetitions',
+    exercise_effort_label: exercise.effort_label ?? '',
+    exercise_difficulty_unit: exercise.difficulty_unit ?? null,
+    exercise_difficulty_label: exercise.difficulty_label ?? '',
+    sets: [
+      {
+        id: null,
+        order: 1,
+        effort_value: 0,
+        difficulty_value: defaultDifficultyValue(exercise.difficulty_unit),
+        is_completed: false,
+      },
+    ],
+  });
+
+  markDirty();
 }
 </script>
