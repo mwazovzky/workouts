@@ -10,6 +10,10 @@ Full product docs in `docs/` — see `docs/README.md` for index.
 
 ## Common Commands
 
+The commands below assume a host PHP/Node toolchain. When developing through Docker Compose (see
+`README.md`), prefix them: `docker compose exec app <php/composer command>` and
+`docker compose exec node <npm command>`.
+
 ### Development
 ```bash
 composer run dev          # Starts server, queue, logs, and Vite concurrently

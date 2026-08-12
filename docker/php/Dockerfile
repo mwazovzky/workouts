@@ -1,26 +1,7 @@
 # syntax=docker/dockerfile:1.7
 ARG PHP_VERSION=8.4
 
-# --- Stage 1: PHP Dependencies (Composer) ---
-FROM composer:2.8 AS composer-deps
-WORKDIR /app
-COPY composer*.json ./
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
-
-# --- Stage 2: Frontend Build (Node.js) ---
-# Use a glibc-based image so Rollup's native optional deps resolve reliably.
-FROM node:20-bookworm-slim AS frontend-builder
-WORKDIR /app
-COPY package*.json ./
-## NOTE: npm has a long-standing bug with optional dependencies in some Docker/buildx setups
-## (commonly surfacing as missing @rollup/rollup-* packages). This install approach trades a bit of
-## determinism for reliability of production builds.
-RUN rm -f package-lock.json && npm install --no-audit --no-fund
-COPY . .
-COPY --from=composer-deps /app/vendor /app/vendor
-RUN npm run build
-
-# --- Stage 3: Base PHP image (shared) ---
+# --- Stage 1: Base PHP image (shared) ---
 FROM php:${PHP_VERSION}-fpm-alpine AS php-base
 WORKDIR /var/www/html
 
@@ -45,11 +26,44 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/99-app.ini
 COPY docker/php/zz-app.conf /usr/local/etc/php-fpm.d/zz-app.conf
 
-# --- Stage 4: Dev PHP-FPM (bind-mounted code) ---
-FROM php-base AS app-dev
+# --- Stage 2: PHP toolchain (shared by the vendor build and the dev runtime) ---
+FROM php-base AS php-tooling
+
+RUN apk add --no-cache git
+COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
+ENV COMPOSER_HOME=/tmp/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+# --- Stage 3: PHP Dependencies (production vendor artifact) ---
+FROM php-tooling AS composer-deps
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+
+# --- Stage 4: Frontend Build (Node.js) ---
+# Use a glibc-based image so Rollup's native optional deps resolve reliably.
+FROM node:20-bookworm-slim AS frontend-builder
+WORKDIR /app
+COPY package*.json ./
+## NOTE: npm has a long-standing bug with optional dependencies in some Docker/buildx setups
+## (commonly surfacing as missing @rollup/rollup-* packages). This install approach trades a bit of
+## determinism for reliability of production builds.
+RUN rm -f package-lock.json && npm install --no-audit --no-fund
+COPY . .
+# resources/js/app.js imports ZiggyVue from vendor/tightenco/ziggy, so the build needs vendor.
+COPY --from=composer-deps /app/vendor /app/vendor
+RUN npm run build
+
+# --- Stage 5: Dev PHP-FPM (bind-mounted code) ---
+FROM php-tooling AS app-dev
+
+COPY docker/php/dev-entrypoint.sh /usr/local/bin/dev-entrypoint
+RUN chmod +x /usr/local/bin/dev-entrypoint
+
+ENTRYPOINT ["dev-entrypoint"]
 CMD ["php-fpm"]
 
-# --- Stage 5: Production web image (nginx + php-fpm) ---
+# --- Stage 6: Production web image (nginx + php-fpm) ---
 FROM php-base AS web
 ARG APP_ENV=production
 ENV APP_ENV=${APP_ENV}
